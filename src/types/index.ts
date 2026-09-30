@@ -85,6 +85,8 @@ export interface FavoriteItem {
   addedAt: string;
 }
 
+export * from './api';
+
 export type ViewType =
   | 'dashboard'
   | 'scratchpad'
@@ -96,7 +98,20 @@ export type ViewType =
   | 'tool'
   | 'favorites'
   | 'recent'
-  | 'settings';
+  | 'settings'
+  | 'api-client'
+  | 'collections'
+  | 'environments'
+  | 'webhooks'
+  | 'http-inspector';
+
+import type {
+  ApiCollection,
+  ApiRequest,
+  ApiHistoryItem,
+  Environment,
+  WebhookSession,
+} from './api';
 
 export interface WorkspaceData {
   tasks: Task[];
@@ -107,4 +122,13 @@ export interface WorkspaceData {
   history: HistoryItem[];
   settings: UserSettings;
   version: number;
+
+  // Phase 2: Developer Integrations
+  apiCollections: ApiCollection[];
+  apiRequests: ApiRequest[];
+  apiHistory: ApiHistoryItem[];
+  environments: Environment[];
+  activeEnvironmentId?: string;
+  webhookSessions: WebhookSession[];
+  activeWebhookSessionId?: string;
 }

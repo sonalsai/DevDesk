@@ -17,6 +17,10 @@ import {
   Shield,
   Keyboard,
   ArrowRight,
+  Send,
+  Layers,
+  Webhook,
+  Globe,
 } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 
@@ -40,6 +44,8 @@ export const CommandPalette: React.FC = () => {
     setIsShortcutsOpen,
     setIsPrivacyModalOpen,
     recordHistory,
+    createNewTab,
+    openRequestInTab,
   } = useWorkspace();
   const { showToast } = useToast();
 
@@ -152,6 +158,98 @@ export const CommandPalette: React.FC = () => {
       },
     });
 
+    // Phase 2: API & Development Actions
+    items.push({
+      id: 'action-api-new-request',
+      title: 'Create API Request',
+      subtitle: 'Open blank request in API Client',
+      category: 'Actions',
+      icon: Send,
+      shortcut: '⌘↵',
+      onSelect: () => {
+        createNewTab();
+        setActiveView('api-client');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-api-client',
+      title: 'Open API Client',
+      subtitle: 'HTTP request testing workbench',
+      category: 'Actions',
+      icon: Send,
+      onSelect: () => {
+        setActiveView('api-client');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-collections',
+      title: 'API Collections & History',
+      subtitle: 'Manage endpoints and request logs',
+      category: 'Actions',
+      icon: FolderKanban,
+      onSelect: () => {
+        setActiveView('collections');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-environments',
+      title: 'Manage Environments',
+      subtitle: 'Configure variables, secrets & diffs',
+      category: 'Actions',
+      icon: Layers,
+      onSelect: () => {
+        setActiveView('environments');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-webhooks',
+      title: 'Open Webhook Inspector',
+      subtitle: 'Inspect payloads and simulate events',
+      category: 'Actions',
+      icon: Webhook,
+      onSelect: () => {
+        setActiveView('webhooks');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-http-inspector',
+      title: 'HTTP & Header Inspector',
+      subtitle: 'Check CORS, response headers and status codes',
+      category: 'Actions',
+      icon: Globe,
+      onSelect: () => {
+        setActiveView('http-inspector');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    // Searchable API Requests
+    data.apiRequests?.forEach((req) => {
+      const coll = data.apiCollections.find((c) => c.id === req.collectionId);
+      items.push({
+        id: `api-req-${req.id}`,
+        title: `${req.method} ${req.name}`,
+        subtitle: `${coll?.name || 'API'} • ${req.url}`,
+        category: 'Tools',
+        icon: Send,
+        onSelect: () => {
+          openRequestInTab(req);
+          setActiveView('api-client');
+          setIsCommandPaletteOpen(false);
+        },
+      });
+    });
+
     // 2. Tools (all 15)
     TOOLS_REGISTRY.forEach((tool) => {
       items.push({
@@ -256,6 +354,10 @@ export const CommandPalette: React.FC = () => {
     return items;
   }, [
     data.settings.theme,
+    data.apiRequests,
+    data.apiCollections,
+    createNewTab,
+    openRequestInTab,
     setActiveView,
     setIsCommandPaletteOpen,
     setIsShortcutsOpen,

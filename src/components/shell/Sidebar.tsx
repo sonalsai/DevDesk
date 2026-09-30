@@ -15,6 +15,10 @@ import {
   Settings,
   Keyboard,
   Shield,
+  Send,
+  Globe,
+  Layers,
+  Webhook,
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
@@ -111,7 +115,71 @@ export const Sidebar: React.FC = () => {
           </button>
         </div>
 
-        {/* TOOLS SECTION */}
+        {/* DEVELOPMENT SECTION */}
+        <div className="sidebar-section">
+          <div className="sidebar-section-title">Development</div>
+
+          <button
+            className={`sidebar-nav-item ${activeView === 'api-client' ? 'active' : ''}`}
+            onClick={() => setActiveView('api-client')}
+            title="API Client"
+          >
+            <div className="nav-item-left">
+              <Send size={15} />
+              <span className="nav-item-label">API Client</span>
+            </div>
+          </button>
+
+          <button
+            className={`sidebar-nav-item ${activeView === 'collections' ? 'active' : ''}`}
+            onClick={() => setActiveView('collections')}
+            title="API Collections & History"
+          >
+            <div className="nav-item-left">
+              <FolderKanban size={15} />
+              <span className="nav-item-label">Collections</span>
+            </div>
+            {data.apiCollections?.length > 0 && (
+              <span className="nav-item-badge">{data.apiCollections.length}</span>
+            )}
+          </button>
+
+          <button
+            className={`sidebar-nav-item ${activeView === 'environments' ? 'active' : ''}`}
+            onClick={() => setActiveView('environments')}
+            title="Environments & Variables"
+          >
+            <div className="nav-item-left">
+              <Layers size={15} />
+              <span className="nav-item-label">Environments</span>
+            </div>
+            {data.environments?.length > 0 && (
+              <span className="nav-item-badge">{data.environments.length}</span>
+            )}
+          </button>
+
+          <button
+            className={`sidebar-nav-item ${activeView === 'webhooks' ? 'active' : ''}`}
+            onClick={() => setActiveView('webhooks')}
+            title="Webhook Inspector"
+          >
+            <div className="nav-item-left">
+              <Webhook size={15} />
+              <span className="nav-item-label">Webhooks</span>
+            </div>
+          </button>
+
+          <button
+            className={`sidebar-nav-item ${activeView === 'http-inspector' ? 'active' : ''}`}
+            onClick={() => setActiveView('http-inspector')}
+            title="HTTP & Header Inspector"
+          >
+            <div className="nav-item-left">
+              <Globe size={15} />
+              <span className="nav-item-label">HTTP Inspector</span>
+            </div>
+          </button>
+        </div>
         <div className="sidebar-section">
           <div className="sidebar-section-title">Tools</div>
 

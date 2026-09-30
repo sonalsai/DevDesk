@@ -2,14 +2,16 @@ import type {
   WorkspaceData,
   UserSettings,
   ScratchpadData,
-  FavoriteItem,
-  HistoryItem
+  ApiCollection,
+  ApiRequest,
+  Environment,
+  WebhookSession,
 } from '../types';
 
-const STORAGE_KEY = 'devdesk_workspace_v1';
+const STORAGE_KEY = 'devdesk_workspace_v2';
 
 export const DEFAULT_SETTINGS: UserSettings = {
-  theme: 'light',
+  theme: 'dark',
   fontSize: 13,
   tabSize: 2,
   wordWrap: true,
@@ -25,40 +27,192 @@ const EMPTY_SCRATCHPAD: ScratchpadData = {
   lastSaved: new Date().toISOString(),
 };
 
-// Workspaces saved before v3 were seeded with sample records. These are their ids
-// (generated ids always carry a timestamp, so user data can't collide with them).
-const SAMPLE_IDS = new Set([
-  'task-1', 'task-2', 'task-3', 'task-4',
-  'proj-1', 'proj-2', 'proj-3',
-  'snip-1', 'snip-2', 'snip-3',
-  'fav-tool-1', 'fav-tool-2', 'fav-tool-3', 'fav-snip-1', 'fav-proj-1',
-  'hist-1', 'hist-2', 'hist-3', 'hist-4',
-]);
-// The sample scratchpad started with this heading and was exactly this long; edited notes are kept
-const SAMPLE_SCRATCHPAD = { prefix: "# Today's Work", length: 419 };
+// Default Environments for Phase 2
+export const DEFAULT_ENVIRONMENTS: Environment[] = [
+  {
+    id: 'env-dev',
+    name: 'Development',
+    description: 'Local development environment with mock endpoints',
+    isDefault: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    variables: [
+      {
+        id: 'var-1',
+        key: 'base_url',
+        value: 'https://jsonplaceholder.typicode.com',
+        isSecret: false,
+        enabled: true,
+      },
+      {
+        id: 'var-2',
+        key: 'api_key',
+        value: 'dev_desk_secret_key_8829',
+        isSecret: true,
+        enabled: true,
+      },
+      {
+        id: 'var-3',
+        key: 'version',
+        value: 'v1',
+        isSecret: false,
+        enabled: true,
+      },
+    ],
+  },
+  {
+    id: 'env-staging',
+    name: 'Staging',
+    description: 'Pre-production staging cluster',
+    isDefault: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    variables: [
+      {
+        id: 'var-4',
+        key: 'base_url',
+        value: 'https://httpbin.org',
+        isSecret: false,
+        enabled: true,
+      },
+      {
+        id: 'var-5',
+        key: 'api_key',
+        value: 'stage_secret_key_991823',
+        isSecret: true,
+        enabled: true,
+      },
+      {
+        id: 'var-6',
+        key: 'version',
+        value: 'v1',
+        isSecret: false,
+        enabled: true,
+      },
+    ],
+  },
+];
 
-function removeSampleData(data: WorkspaceData): WorkspaceData {
-  const isSample = (id?: string) => !!id && SAMPLE_IDS.has(id);
-  const pointsAtSample = (item: FavoriteItem | HistoryItem) =>
-    item.type !== 'tool' && isSample(item.targetId);
-  const { content } = data.scratchpad;
-  const isSampleScratchpad =
-    content.length === SAMPLE_SCRATCHPAD.length && content.startsWith(SAMPLE_SCRATCHPAD.prefix);
+// Default Collections for Phase 2
+export const DEFAULT_COLLECTIONS: ApiCollection[] = [
+  {
+    id: 'col-jsonplaceholder',
+    name: 'JSONPlaceholder API',
+    description: 'Fake online REST API for testing and prototyping',
+    order: 0,
+    isFavorite: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'col-httpbin',
+    name: 'HTTPBin Diagnostics',
+    description: 'HTTP request & response service for debugging methods and headers',
+    order: 1,
+    isFavorite: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
 
-  return {
-    ...data,
-    tasks: data.tasks
-      .filter((t) => !isSample(t.id))
-      .map((t) => (isSample(t.projectId) ? { ...t, projectId: undefined } : t)),
-    snippets: data.snippets
-      .filter((s) => !isSample(s.id))
-      .map((s) => (isSample(s.projectId) ? { ...s, projectId: undefined } : s)),
-    projects: data.projects.filter((p) => !isSample(p.id)),
-    favorites: data.favorites.filter((f) => !isSample(f.id) && !pointsAtSample(f)),
-    history: data.history.filter((h) => !isSample(h.id) && !pointsAtSample(h)),
-    scratchpad: isSampleScratchpad ? { ...data.scratchpad, content: '' } : data.scratchpad,
-  };
-}
+// Default API Requests for Phase 2
+export const DEFAULT_API_REQUESTS: ApiRequest[] = [
+  {
+    id: 'req-get-posts',
+    collectionId: 'col-jsonplaceholder',
+    name: 'Get All Posts',
+    description: 'Retrieve a list of public demo posts',
+    method: 'GET',
+    url: '{{base_url}}/posts',
+    params: [
+      { id: 'p-1', key: '_limit', value: '5', enabled: true },
+      { id: 'p-2', key: '_page', value: '1', enabled: true },
+    ],
+    headers: [
+      { id: 'h-1', key: 'Accept', value: 'application/json', enabled: true },
+    ],
+    body: {
+      type: 'none',
+      rawText: '',
+      jsonContent: '',
+      formParams: [],
+      multipartParams: [],
+    },
+    auth: {
+      type: 'none',
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'req-create-post',
+    collectionId: 'col-jsonplaceholder',
+    name: 'Create New Post',
+    description: 'POST sample JSON record to public demo endpoint',
+    method: 'POST',
+    url: '{{base_url}}/posts',
+    params: [],
+    headers: [
+      { id: 'h-2', key: 'Content-Type', value: 'application/json; charset=UTF-8', enabled: true },
+    ],
+    body: {
+      type: 'json',
+      rawText: '',
+      jsonContent: JSON.stringify(
+        {
+          title: 'DevDesk Phase 2 Launch',
+          body: 'All-in-one developer workspace with full API client and developer tools.',
+          userId: 1,
+        },
+        null,
+        2
+      ),
+      formParams: [],
+      multipartParams: [],
+    },
+    auth: {
+      type: 'bearer',
+      bearerToken: '{{api_key}}',
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'req-httpbin-headers',
+    collectionId: 'col-httpbin',
+    name: 'Inspect Request Headers',
+    description: 'Echoes back all HTTP headers sent by the client',
+    method: 'GET',
+    url: 'https://httpbin.org/headers',
+    params: [],
+    headers: [
+      { id: 'h-3', key: 'X-DevDesk-Client', value: 'Phase-2', enabled: true },
+    ],
+    body: {
+      type: 'none',
+      rawText: '',
+      jsonContent: '',
+      formParams: [],
+      multipartParams: [],
+    },
+    auth: {
+      type: 'none',
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
+// Default Webhook Session
+export const DEFAULT_WEBHOOK_SESSIONS: WebhookSession[] = [
+  {
+    id: 'wh-session-default',
+    name: 'Local Inspection Session',
+    token: 'wh_local_' + Math.random().toString(36).substring(2, 8),
+    events: [],
+    createdAt: new Date().toISOString(),
+  },
+];
 
 export const INITIAL_WORKSPACE: WorkspaceData = {
   tasks: [],
@@ -68,35 +222,72 @@ export const INITIAL_WORKSPACE: WorkspaceData = {
   favorites: [],
   history: [],
   settings: DEFAULT_SETTINGS,
-  version: 3,
+  version: 4,
+
+  // Phase 2
+  apiCollections: DEFAULT_COLLECTIONS,
+  apiRequests: DEFAULT_API_REQUESTS,
+  apiHistory: [],
+  environments: DEFAULT_ENVIRONMENTS,
+  activeEnvironmentId: 'env-dev',
+  webhookSessions: DEFAULT_WEBHOOK_SESSIONS,
+  activeWebhookSessionId: 'wh-session-default',
 };
+
+export function migrateWorkspaceData(parsed: any): WorkspaceData {
+  if (!parsed || typeof parsed !== 'object') {
+    return INITIAL_WORKSPACE;
+  }
+
+  const settings = { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) };
+
+  return {
+    tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
+    snippets: Array.isArray(parsed.snippets) ? parsed.snippets : [],
+    projects: Array.isArray(parsed.projects) ? parsed.projects : [],
+    scratchpad:
+      parsed.scratchpad && typeof parsed.scratchpad.content === 'string'
+        ? parsed.scratchpad
+        : EMPTY_SCRATCHPAD,
+    favorites: Array.isArray(parsed.favorites) ? parsed.favorites : [],
+    history: Array.isArray(parsed.history) ? parsed.history : [],
+    settings,
+    version: 4,
+
+    // Phase 2 items
+    apiCollections: Array.isArray(parsed.apiCollections) && parsed.apiCollections.length > 0
+      ? parsed.apiCollections
+      : DEFAULT_COLLECTIONS,
+    apiRequests: Array.isArray(parsed.apiRequests) && parsed.apiRequests.length > 0
+      ? parsed.apiRequests
+      : DEFAULT_API_REQUESTS,
+    apiHistory: Array.isArray(parsed.apiHistory) ? parsed.apiHistory : [],
+    environments: Array.isArray(parsed.environments) && parsed.environments.length > 0
+      ? parsed.environments
+      : DEFAULT_ENVIRONMENTS,
+    activeEnvironmentId: parsed.activeEnvironmentId || 'env-dev',
+    webhookSessions: Array.isArray(parsed.webhookSessions) && parsed.webhookSessions.length > 0
+      ? parsed.webhookSessions
+      : DEFAULT_WEBHOOK_SESSIONS,
+    activeWebhookSessionId: parsed.activeWebhookSessionId || 'wh-session-default',
+  };
+}
 
 export function loadWorkspaceData(): WorkspaceData {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    // Try v2 storage key first, then fallback to v1 for migration
+    let raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      raw = localStorage.getItem('devdesk_workspace_v1');
+    }
+
     if (!raw) {
       saveWorkspaceData(INITIAL_WORKSPACE);
       return INITIAL_WORKSPACE;
     }
+
     const parsed = JSON.parse(raw);
-    const version = parsed.version || 1;
-    const settings = { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) };
-    // v2 made light the default theme: switch v1 workspaces over once
-    if (version < 2) settings.theme = 'light';
-    const data: WorkspaceData = {
-      tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
-      snippets: Array.isArray(parsed.snippets) ? parsed.snippets : [],
-      projects: Array.isArray(parsed.projects) ? parsed.projects : [],
-      scratchpad: parsed.scratchpad && typeof parsed.scratchpad.content === 'string'
-        ? parsed.scratchpad
-        : EMPTY_SCRATCHPAD,
-      favorites: Array.isArray(parsed.favorites) ? parsed.favorites : [],
-      history: Array.isArray(parsed.history) ? parsed.history : [],
-      settings,
-      version: 3,
-    };
-    // v3 removed the sample workspace: strip the old sample records once
-    return version < 3 ? removeSampleData(data) : data;
+    return migrateWorkspaceData(parsed);
   } catch (err) {
     console.error('Error loading DevDesk workspace data from localStorage:', err);
     return INITIAL_WORKSPACE;
@@ -111,18 +302,34 @@ export function saveWorkspaceData(data: WorkspaceData): void {
   }
 }
 
-export function exportWorkspaceJSON(data: WorkspaceData): string {
+export function exportWorkspaceJSON(data: WorkspaceData, includeSecrets = false): string {
+  // If secrets should not be exported, sanitize environment secret values
+  if (!includeSecrets) {
+    const sanitizedEnvironments = data.environments.map((env) => ({
+      ...env,
+      variables: env.variables.map((v) =>
+        v.isSecret ? { ...v, value: '••••••••••••' } : v
+      ),
+    }));
+
+    const sanitizedData = {
+      ...data,
+      environments: sanitizedEnvironments,
+    };
+    return JSON.stringify(sanitizedData, null, 2);
+  }
+
   return JSON.stringify(data, null, 2);
 }
 
-export function downloadWorkspaceBackup(data: WorkspaceData): void {
-  const json = exportWorkspaceJSON(data);
+export function downloadWorkspaceBackup(data: WorkspaceData, includeSecrets = false): void {
+  const json = exportWorkspaceJSON(data, includeSecrets);
   const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   const date = new Date().toISOString().split('T')[0];
   a.href = url;
-  a.download = `devdesk-workspace-backup-${date}.json`;
+  a.download = `devdesk-workspace-backup-${date}${includeSecrets ? '-with-secrets' : ''}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -134,22 +341,32 @@ export function parseImportedWorkspace(jsonStr: string): WorkspaceData {
   if (!parsed || typeof parsed !== 'object') {
     throw new Error('Invalid JSON format for DevDesk workspace.');
   }
-  const data: WorkspaceData = {
+
+  return {
     tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
     snippets: Array.isArray(parsed.snippets) ? parsed.snippets : [],
     projects: Array.isArray(parsed.projects) ? parsed.projects : [],
-    scratchpad: parsed.scratchpad && typeof parsed.scratchpad.content === 'string'
-      ? parsed.scratchpad
-      : { content: '', isPinned: false, lastSaved: new Date().toISOString() },
+    scratchpad:
+      parsed.scratchpad && typeof parsed.scratchpad.content === 'string'
+        ? parsed.scratchpad
+        : EMPTY_SCRATCHPAD,
     favorites: Array.isArray(parsed.favorites) ? parsed.favorites : [],
     history: Array.isArray(parsed.history) ? parsed.history : [],
     settings: { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) },
-    // Imported backups keep the theme they were saved with
-    version: 3,
+    version: 4,
+
+    // Phase 2 items
+    apiCollections: Array.isArray(parsed.apiCollections) ? parsed.apiCollections : DEFAULT_COLLECTIONS,
+    apiRequests: Array.isArray(parsed.apiRequests) ? parsed.apiRequests : DEFAULT_API_REQUESTS,
+    apiHistory: Array.isArray(parsed.apiHistory) ? parsed.apiHistory : [],
+    environments: Array.isArray(parsed.environments) ? parsed.environments : DEFAULT_ENVIRONMENTS,
+    activeEnvironmentId: parsed.activeEnvironmentId || 'env-dev',
+    webhookSessions: Array.isArray(parsed.webhookSessions) ? parsed.webhookSessions : DEFAULT_WEBHOOK_SESSIONS,
+    activeWebhookSessionId: parsed.activeWebhookSessionId || 'wh-session-default',
   };
-  return (parsed.version || 1) < 3 ? removeSampleData(data) : data;
 }
 
 export function clearWorkspaceStorage(): void {
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem('devdesk_workspace_v1');
 }

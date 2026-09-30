@@ -2648,3 +2648,46 @@ h3 {
     font-size: 28px;
   }
 }
+
+/* ==========================================================================
+   PHASE 2: API CLIENT & DEVELOPER WORKBENCH
+   ========================================================================== */
+.api-split-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 900px) {
+  .api-split-layout {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+    height: auto !important;
+  }
+}
+
+.api-tabs-bar::-webkit-scrollbar {
+  height: 4px;
+}
+.api-tabs-bar::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 4px;
+}
+
+.api-tab-pill:hover {
+  background: var(--bg-surface-hover) !important;
+}
+
+.autocomplete-item:hover {
+  background: var(--bg-surface-hover);
+}
+
+.json-path-item:hover {
+  background: var(--bg-surface-hover);
+}
+
+.btn-subtab:hover {
+  color: var(--text-primary) !important;
+}

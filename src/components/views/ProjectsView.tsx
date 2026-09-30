@@ -13,6 +13,9 @@ import {
   Edit2,
   ArrowLeft,
   Link as LinkIcon,
+  Send,
+  Layers,
+  Folder,
 } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import { Modal } from '../common/Modal';
@@ -29,6 +32,8 @@ export const ProjectsView: React.FC = () => {
     deleteProject,
     toggleFavoriteProject,
     toggleTaskStatus,
+    openRequestInTab,
+    addCollection,
   } = useWorkspace();
   const { showToast } = useToast();
 
@@ -130,10 +135,11 @@ export const ProjectsView: React.FC = () => {
     showToast('Project notes saved', 'success', 1500);
   };
 
-  // If in project-detail view and project is valid, show project detail
   if (activeView === 'project-detail' && currentProject) {
     const projectTasks = data.tasks.filter((t) => t.projectId === currentProject.id);
     const projectSnippets = data.snippets.filter((s) => s.projectId === currentProject.id);
+    const projectCollections = (data.apiCollections || []).filter((c) => c.projectId === currentProject.id);
+    const projectEnvironments = (data.environments || []).filter((e) => e.projectId === currentProject.id);
 
     return (
       <div className="workspace-page">
@@ -425,6 +431,163 @@ export const ProjectsView: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Phase 2: API & Environment Integrations for Project */}
+        <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 16 }}>
+          {/* API Collections */}
+          <div className="tool-panel">
+            <div className="tool-panel-header">
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Send size={14} style={{ color: 'var(--accent-hover)' }} />
+                API Collections ({projectCollections.length})
+              </span>
+              <button
+                className="btn btn-subtle btn-sm"
+                onClick={() => {
+                  addCollection({
+                    name: `${currentProject.name} API`,
+                    projectId: currentProject.id,
+                    description: `API endpoints for ${currentProject.name}`,
+                    isFavorite: false,
+                  });
+                  setActiveView('collections');
+                  showToast('Created API collection for project', 'success', 1500);
+                }}
+              >
+                <Plus size={12} />
+                <span>New Collection</span>
+              </button>
+            </div>
+
+            <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {projectCollections.length > 0 ? (
+                projectCollections.map((coll) => (
+                  <div
+                    key={coll.id}
+                    style={{
+                      padding: '10px 12px',
+                      backgroundColor: 'var(--bg-input)',
+                      borderRadius: 'var(--radius-md)',
+                      border: '1px solid var(--border-subtle)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 6,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Folder size={13} style={{ color: 'var(--accent-hover)' }} />
+                        <span>{coll.name}</span>
+                      </div>
+                      <button
+                        className="btn btn-subtle btn-sm"
+                        onClick={() => setActiveView('collections')}
+                      >
+                        Manage
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {data.apiRequests.filter((r) => r.collectionId === coll.id).map((r) => (
+                        <div
+                          key={r.id}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '4px 8px',
+                            borderRadius: 'var(--radius-sm)',
+                            backgroundColor: 'var(--bg-surface)',
+                            fontSize: 11,
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontWeight: 700, fontSize: 9.5, color: r.method === 'GET' ? 'var(--success)' : 'var(--accent-hover)' }}>
+                              {r.method}
+                            </span>
+                            <span>{r.name}</span>
+                          </div>
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            style={{ padding: '2px 6px', fontSize: 10 }}
+                            onClick={() => {
+                              openRequestInTab(r);
+                              setActiveView('api-client');
+                            }}
+                          >
+                            Open in Client
+                          </button>
+                        </div>
+                      ))}
+                      {data.apiRequests.filter((r) => r.collectionId === coll.id).length === 0 && (
+                        <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
+                          No endpoints yet. Click Manage to add requests.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div style={{ color: 'var(--text-muted)', fontSize: 12, padding: '12px 0' }}>
+                  No API collections assigned to this project.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Project Environments */}
+          <div className="tool-panel">
+            <div className="tool-panel-header">
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Layers size={14} style={{ color: 'var(--info)' }} />
+                Project Environments ({projectEnvironments.length})
+              </span>
+              <button
+                className="btn btn-subtle btn-sm"
+                onClick={() => setActiveView('environments')}
+              >
+                <Plus size={12} />
+                <span>Configure</span>
+              </button>
+            </div>
+
+            <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {projectEnvironments.length > 0 ? (
+                projectEnvironments.map((env) => (
+                  <div
+                    key={env.id}
+                    style={{
+                      padding: '8px 12px',
+                      backgroundColor: 'var(--bg-input)',
+                      borderRadius: 'var(--radius-md)',
+                      border: '1px solid var(--border-subtle)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 12.5 }}>{env.name}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
+                        {env.variables.length} environment variables
+                      </div>
+                    </div>
+                    <button
+                      className="btn btn-subtle btn-sm"
+                      onClick={() => setActiveView('environments')}
+                    >
+                      View Vars
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div style={{ color: 'var(--text-muted)', fontSize: 12, padding: '12px 0' }}>
+                  No environments linked to this project yet.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -465,6 +628,7 @@ export const ProjectsView: React.FC = () => {
         {data.projects.map((proj) => {
           const taskCount = data.tasks.filter((t) => t.projectId === proj.id).length;
           const snippetCount = data.snippets.filter((s) => s.projectId === proj.id).length;
+          const apiCount = (data.apiCollections || []).filter((c) => c.projectId === proj.id).length;
 
           return (
             <div
@@ -499,6 +663,8 @@ export const ProjectsView: React.FC = () => {
                 <span>{taskCount} tasks</span>
                 <span>•</span>
                 <span>{snippetCount} snippets</span>
+                <span>•</span>
+                <span>{apiCount} APIs</span>
                 <span>•</span>
                 <span>{proj.links.length} links</span>
               </div>

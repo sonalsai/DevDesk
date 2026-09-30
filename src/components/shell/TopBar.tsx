@@ -50,6 +50,16 @@ export const TopBar: React.FC = () => {
         return { title: 'Recent History', breadcrumb: 'Workspace' };
       case 'settings':
         return { title: 'Settings', breadcrumb: 'Preferences' };
+      case 'api-client':
+        return { title: 'API Client', breadcrumb: 'Development' };
+      case 'collections':
+        return { title: 'Collections & History', breadcrumb: 'Development' };
+      case 'environments':
+        return { title: 'Environments', breadcrumb: 'Development' };
+      case 'webhooks':
+        return { title: 'Webhook Inspector', breadcrumb: 'Development' };
+      case 'http-inspector':
+        return { title: 'HTTP Inspector', breadcrumb: 'Development' };
       default:
         return { title: 'Workspace', breadcrumb: '' };
     }

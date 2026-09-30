@@ -15,6 +15,11 @@ import { AllToolsView } from '../views/AllToolsView';
 import { FavoritesView } from '../views/FavoritesView';
 import { RecentView } from '../views/RecentView';
 import { SettingsView } from '../views/SettingsView';
+import { ApiClientView } from '../views/api/ApiClientView';
+import { CollectionsManagerView } from '../views/api/CollectionsManagerView';
+import { EnvironmentsView } from '../views/api/EnvironmentsView';
+import { WebhookInspectorView } from '../views/api/WebhookInspectorView';
+import { HttpInspectorView } from '../views/api/HttpInspectorView';
 
 import { getToolById } from '../../registry/toolsRegistry';
 
@@ -127,6 +132,16 @@ export const AppShell: React.FC = () => {
         return <RecentView />;
       case 'settings':
         return <SettingsView />;
+      case 'api-client':
+        return <ApiClientView />;
+      case 'collections':
+        return <CollectionsManagerView />;
+      case 'environments':
+        return <EnvironmentsView />;
+      case 'webhooks':
+        return <WebhookInspectorView />;
+      case 'http-inspector':
+        return <HttpInspectorView />;
       default:
         return <HomeDashboard />;
     }
