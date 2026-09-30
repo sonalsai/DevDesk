@@ -1,0 +1,110 @@
+export type ThemeMode = 'dark' | 'light' | 'system';
+
+export interface UserSettings {
+  theme: ThemeMode;
+  fontSize: number;
+  tabSize: number;
+  wordWrap: boolean;
+  lineNumbers: boolean;
+  autoSave: boolean;
+  confirmDestructive: boolean;
+  trackHistory: boolean;
+}
+
+export type TaskStatus = 'todo' | 'in_progress' | 'done';
+export type TaskPriority = 'low' | 'medium' | 'high';
+
+export interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  dueDate?: string; // YYYY-MM-DD
+  projectId?: string;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Snippet {
+  id: string;
+  title: string;
+  description?: string;
+  code: string;
+  language: string;
+  tags: string[];
+  projectId?: string;
+  isFavorite: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectLink {
+  id: string;
+  label: string;
+  url: string;
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  description: string;
+  status: 'active' | 'planning' | 'completed' | 'archived';
+  isFavorite: boolean;
+  color: string;
+  links: ProjectLink[];
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ScratchpadData {
+  content: string;
+  isPinned: boolean;
+  lastSaved: string;
+}
+
+export type HistoryItemType = 'tool' | 'snippet' | 'project';
+
+export interface HistoryItem {
+  id: string;
+  type: HistoryItemType;
+  targetId: string;
+  title: string;
+  subtitle?: string;
+  timestamp: string; // ISO string
+}
+
+export interface FavoriteItem {
+  id: string;
+  type: 'tool' | 'snippet' | 'project';
+  targetId: string;
+  title: string;
+  subtitle?: string;
+  addedAt: string;
+}
+
+export type ViewType =
+  | 'dashboard'
+  | 'scratchpad'
+  | 'tasks'
+  | 'projects'
+  | 'project-detail'
+  | 'snippets'
+  | 'all-tools'
+  | 'tool'
+  | 'favorites'
+  | 'recent'
+  | 'settings';
+
+export interface WorkspaceData {
+  tasks: Task[];
+  snippets: Snippet[];
+  projects: Project[];
+  scratchpad: ScratchpadData;
+  favorites: FavoriteItem[];
+  history: HistoryItem[];
+  settings: UserSettings;
+  version: number;
+}
