@@ -30,6 +30,16 @@ const SHORTCUTS: ShortcutRow[] = [
     context: 'Global (when not typing)',
   },
   {
+    keys: ['Alt', '←', '/', '⌘', '['],
+    description: 'Navigate back in workspace history',
+    context: 'Global navigation',
+  },
+  {
+    keys: ['Alt', '→', '/', '⌘', ']'],
+    description: 'Navigate forward in workspace history',
+    context: 'Global navigation',
+  },
+  {
     keys: ['Esc'],
     description: 'Close active dialog, modal, or command palette',
     context: 'Global',

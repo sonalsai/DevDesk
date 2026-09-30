@@ -301,15 +301,33 @@ h3 {
   min-width: 0;
 }
 
-.top-bar-crumb {
-  color: var(--text-muted);
-  font-size: 13px;
-  white-space: nowrap;
+/* Back navigation arrow in TopBar (rendered on all subpages, hidden on Home) */
+.top-bar-back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
 }
 
-.breadcrumb-separator {
-  color: var(--border-hover);
-  font-size: 14px;
+.top-bar-back-btn:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  transform: translateX(-2px);
+}
+
+.top-bar-back-btn:active {
+  transform: translateX(0);
 }
 
 .top-bar-title {
@@ -1557,7 +1575,30 @@ h3 {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+}
+
+.tool-back-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--radius-md);
+  background-color: var(--bg-sunken);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.tool-back-nav-btn:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  transform: translateX(-2px);
 }
 
 .tool-header-icon {
@@ -2605,9 +2646,7 @@ h3 {
   .app-sidebar .nav-item-label,
   .app-sidebar .nav-item-badge,
   .app-sidebar .brand-name,
-  .app-sidebar .sidebar-collapse-btn,
-  .top-bar-crumb,
-  .top-bar-crumb + .breadcrumb-separator {
+  .app-sidebar .sidebar-collapse-btn {
     display: none;
   }
   .app-sidebar .sidebar-brand {
@@ -2627,7 +2666,6 @@ h3 {
   /* Shortcuts & privacy stay reachable from the sidebar footer */
   .search-placeholder-group span,
   .kbd-group,
-  .top-bar-left .breadcrumb-separator,
   .top-bar-right [aria-label='Keyboard shortcuts'],
   .top-bar-right [aria-label='Privacy information'] {
     display: none;

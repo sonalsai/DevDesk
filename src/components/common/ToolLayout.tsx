@@ -1,6 +1,6 @@
 import React from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { Star, ShieldCheck } from 'lucide-react';
+import { Star, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 
 interface ToolLayoutProps {
@@ -20,13 +20,30 @@ export const ToolLayout: React.FC<ToolLayoutProps> = ({
   actions,
   children,
 }) => {
-  const { isToolFavorite, toggleFavoriteTool, setIsPrivacyModalOpen } = useWorkspace();
+  const { isToolFavorite, toggleFavoriteTool, setIsPrivacyModalOpen, setActiveView, goBack, canGoBack } = useWorkspace();
   const isFav = isToolFavorite(toolId);
+
+  const handleBack = () => {
+    if (canGoBack) {
+      goBack();
+    } else {
+      setActiveView('all-tools');
+    }
+  };
 
   return (
     <div className="tool-workspace">
       <div className="tool-header-card">
         <div className="tool-header-left">
+          <button
+            type="button"
+            className="tool-back-nav-btn"
+            onClick={handleBack}
+            title="Back to all utilities"
+            aria-label="Back to all utilities"
+          >
+            <ArrowLeft size={16} />
+          </button>
           <div className="tool-header-icon">
             <Icon size={20} />
           </div>

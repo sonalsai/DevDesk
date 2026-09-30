@@ -36,6 +36,10 @@ interface WorkspaceContextType {
   isPrivacyModalOpen: boolean;
   scratchpadSaveStatus: 'saved' | 'saving' | 'idle';
   setActiveView: (view: ViewType, options?: { toolId?: string; projectId?: string }) => void;
+  canGoBack: boolean;
+  canGoForward: boolean;
+  goBack: () => void;
+  goForward: () => void;
   setIsSidebarCollapsed: (val: boolean | ((prev: boolean) => boolean)) => void;
   setIsCommandPaletteOpen: (open: boolean) => void;
   setIsShortcutsOpen: (open: boolean) => void;
@@ -193,19 +197,91 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [data.settings.theme]);
 
+  // Navigation history stack for Back/Forward navigation
+  const [navState, setNavState] = useState<{
+    history: Array<{ view: ViewType; toolId?: string; projectId?: string }>;
+    currentIndex: number;
+  }>({
+    history: [{ view: 'dashboard' }],
+    currentIndex: 0,
+  });
+
+  const canGoBack = navState.currentIndex > 0;
+  const canGoForward = navState.currentIndex < navState.history.length - 1;
+
   const setActiveView = useCallback(
     (view: ViewType, options?: { toolId?: string; projectId?: string }) => {
       setActiveViewState(view);
-      if (options?.toolId !== undefined) {
-        setSelectedToolId(options.toolId);
-      }
-      if (options?.projectId !== undefined) {
-        setSelectedProjectId(options.projectId);
-      }
+      setSelectedToolId(options?.toolId ?? null);
+      setSelectedProjectId(options?.projectId ?? null);
+
+      setNavState((prev) => {
+        const current = prev.history[prev.currentIndex];
+        const nextItem = {
+          view,
+          toolId: options?.toolId,
+          projectId: options?.projectId,
+        };
+
+        if (
+          current &&
+          current.view === nextItem.view &&
+          current.toolId === nextItem.toolId &&
+          current.projectId === nextItem.projectId
+        ) {
+          return prev;
+        }
+
+        const sliced = prev.history.slice(0, prev.currentIndex + 1);
+        const newHistory = [...sliced, nextItem].slice(-50);
+        return {
+          history: newHistory,
+          currentIndex: newHistory.length - 1,
+        };
+      });
+
       window.scrollTo(0, 0);
     },
     []
   );
+
+  const goBack = useCallback(() => {
+    setNavState((prev) => {
+      if (prev.currentIndex <= 0) return prev;
+      const prevIndex = prev.currentIndex - 1;
+      const target = prev.history[prevIndex];
+      if (target) {
+        setActiveViewState(target.view);
+        setSelectedToolId(target.toolId ?? null);
+        setSelectedProjectId(target.projectId ?? null);
+        window.scrollTo(0, 0);
+        return {
+          ...prev,
+          currentIndex: prevIndex,
+        };
+      }
+      return prev;
+    });
+  }, []);
+
+  const goForward = useCallback(() => {
+    setNavState((prev) => {
+      if (prev.currentIndex >= prev.history.length - 1) return prev;
+      const nextIndex = prev.currentIndex + 1;
+      const target = prev.history[nextIndex];
+      if (target) {
+        setActiveViewState(target.view);
+        setSelectedToolId(target.toolId ?? null);
+        setSelectedProjectId(target.projectId ?? null);
+        window.scrollTo(0, 0);
+        return {
+          ...prev,
+          currentIndex: nextIndex,
+        };
+      }
+      return prev;
+    });
+  }, []);
 
   // History tracking
   const recordHistory = useCallback(
@@ -872,6 +948,10 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         isPrivacyModalOpen,
         scratchpadSaveStatus,
         setActiveView,
+        canGoBack,
+        canGoForward,
+        goBack,
+        goForward,
         setIsSidebarCollapsed,
         setIsCommandPaletteOpen,
         setIsShortcutsOpen,

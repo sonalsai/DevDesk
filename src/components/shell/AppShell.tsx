@@ -34,6 +34,10 @@ export const AppShell: React.FC = () => {
     setIsShortcutsOpen,
     isPrivacyModalOpen,
     setIsPrivacyModalOpen,
+    canGoBack,
+    canGoForward,
+    goBack,
+    goForward,
   } = useWorkspace();
 
   // Keyboard navigation & global shortcuts
@@ -54,6 +58,24 @@ export const AppShell: React.FC = () => {
         e.preventDefault();
         setIsCommandPaletteOpen(true);
         return;
+      }
+
+      // History navigation: Alt + ArrowLeft or Cmd/Ctrl + [ -> Back
+      if ((e.altKey && e.key === 'ArrowLeft') || (cmdOrCtrl && e.key === '[')) {
+        if (!isInput && canGoBack) {
+          e.preventDefault();
+          goBack();
+          return;
+        }
+      }
+
+      // History navigation: Alt + ArrowRight or Cmd/Ctrl + ] -> Forward
+      if ((e.altKey && e.key === 'ArrowRight') || (cmdOrCtrl && e.key === ']')) {
+        if (!isInput && canGoForward) {
+          e.preventDefault();
+          goForward();
+          return;
+        }
       }
 
       // Esc -> Close palette / modals
@@ -102,6 +124,10 @@ export const AppShell: React.FC = () => {
     setIsShortcutsOpen,
     setIsPrivacyModalOpen,
     setActiveView,
+    canGoBack,
+    canGoForward,
+    goBack,
+    goForward,
   ]);
 
   // Render workspace content based on activeView

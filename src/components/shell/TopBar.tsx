@@ -1,7 +1,7 @@
 import React from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { TOOLS_REGISTRY } from '../../registry/toolsRegistry';
-import { Search, Moon, Sun, Keyboard, Shield } from 'lucide-react';
+import { Search, Moon, Sun, Keyboard, Shield, ArrowLeft } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 
 export const TopBar: React.FC = () => {
@@ -15,57 +15,65 @@ export const TopBar: React.FC = () => {
     setIsShortcutsOpen,
     setIsPrivacyModalOpen,
     setActiveView,
+    canGoBack,
+    goBack,
   } = useWorkspace();
   const { showToast } = useToast();
 
   const isMac = typeof window !== 'undefined' && navigator.userAgent.toUpperCase().indexOf('MAC') >= 0;
   const modKey = isMac ? '⌘' : 'Ctrl';
 
-  // Compute breadcrumb & title
-  const getPageInfo = () => {
+  // Compute page title (no breadcrumbs/path needed anywhere)
+  const getPageTitle = () => {
     switch (activeView) {
       case 'dashboard':
-        return { title: 'Dashboard', breadcrumb: 'Workspace' };
+        return 'Dashboard';
       case 'scratchpad':
-        return { title: 'Scratchpad', breadcrumb: 'Workspace' };
+        return 'Scratchpad';
       case 'tasks':
-        return { title: 'Tasks', breadcrumb: 'Workspace' };
+        return 'Tasks';
       case 'projects':
-        return { title: 'Projects', breadcrumb: 'Workspace' };
+        return 'Projects';
       case 'project-detail': {
         const proj = data.projects.find((p) => p.id === selectedProjectId);
-        return { title: proj ? proj.name : 'Project Details', breadcrumb: 'Projects' };
+        return proj ? proj.name : 'Project Details';
       }
       case 'snippets':
-        return { title: 'Code Snippets', breadcrumb: 'Library' };
+        return 'Code Snippets';
       case 'all-tools':
-        return { title: 'All Utilities', breadcrumb: 'Tools' };
+        return 'All Utilities';
       case 'tool': {
         const tool = TOOLS_REGISTRY.find((t) => t.id === selectedToolId);
-        return { title: tool ? tool.name : 'Utility', breadcrumb: 'Tools' };
+        return tool ? tool.name : 'Utility';
       }
       case 'favorites':
-        return { title: 'Favorites', breadcrumb: 'Workspace' };
+        return 'Favorites';
       case 'recent':
-        return { title: 'Recent History', breadcrumb: 'Workspace' };
+        return 'Recent History';
       case 'settings':
-        return { title: 'Settings', breadcrumb: 'Preferences' };
+        return 'Settings';
       case 'api-client':
-        return { title: 'API Client', breadcrumb: 'Development' };
+        return 'API Client';
       case 'collections':
-        return { title: 'Collections & History', breadcrumb: 'Development' };
+        return 'Collections & History';
       case 'environments':
-        return { title: 'Environments', breadcrumb: 'Development' };
+        return 'Environments';
       case 'webhooks':
-        return { title: 'Webhook Inspector', breadcrumb: 'Development' };
+        return 'Webhook Inspector';
       case 'http-inspector':
-        return { title: 'HTTP Inspector', breadcrumb: 'Development' };
+        return 'HTTP Inspector';
       default:
-        return { title: 'Workspace', breadcrumb: '' };
+        return 'DevDesk';
     }
   };
 
-  const pageInfo = getPageInfo();
+  const handleBack = () => {
+    if (canGoBack) {
+      goBack();
+    } else {
+      setActiveView('dashboard');
+    }
+  };
 
   const handleToggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
     // The theme reveal (index.css) grows from the button that was clicked
@@ -77,15 +85,25 @@ export const TopBar: React.FC = () => {
     showToast(`Switched to ${nextTheme} mode`, 'info', 1500);
   };
 
+  const isHome = activeView === 'dashboard';
+
   return (
     <header className="top-bar">
-      {/* Left: Breadcrumbs */}
+      {/* Left: Back Arrow (only when not on home) + Page Title (no path anywhere) */}
       <div className="top-bar-left">
-        <span className="top-bar-crumb">{pageInfo.breadcrumb}</span>
+        {!isHome && (
+          <button
+            type="button"
+            className="top-bar-back-btn"
+            onClick={handleBack}
+            title={`Back (${isMac ? '⌥←' : 'Alt+←'})`}
+            aria-label="Back"
+          >
+            <ArrowLeft size={16} />
+          </button>
+        )}
 
-        <span className="breadcrumb-separator">/</span>
-
-        <span className="top-bar-title">{pageInfo.title}</span>
+        <span className="top-bar-title">{getPageTitle()}</span>
       </div>
 
       {/* Center: Global Search Bar trigger (Cmd+K) */}
