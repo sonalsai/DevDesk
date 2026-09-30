@@ -1,7 +1,37 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { ToolLayout } from '../common/ToolLayout';
 import { ShieldCheck, RefreshCw, Copy, Check, Lock } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
+
+function createSecurePassword(
+  len: number,
+  upper: boolean,
+  lower: boolean,
+  nums: boolean,
+  syms: boolean,
+  noAmbiguous: boolean
+): string {
+  let charset = '';
+  if (upper) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  if (lower) charset += 'abcdefghijklmnopqrstuvwxyz';
+  if (nums) charset += '0123456789';
+  if (syms) charset += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
+  if (noAmbiguous) {
+    charset = charset.replace(/[1lI0Oo`'"~,;:.<>{}[\]()/\\]/g, '');
+  }
+
+  if (!charset) return '';
+
+  const randomValues = new Uint32Array(len);
+  crypto.getRandomValues(randomValues);
+
+  let result = '';
+  for (let i = 0; i < len; i++) {
+    result += charset[randomValues[i] % charset.length];
+  }
+  return result;
+}
 
 export const PasswordGenerator: React.FC = () => {
   const { showToast } = useToast();
@@ -11,46 +41,23 @@ export const PasswordGenerator: React.FC = () => {
   const [includeNumbers, setIncludeNumbers] = useState<boolean>(true);
   const [includeSymbols, setIncludeSymbols] = useState<boolean>(true);
   const [excludeAmbiguous, setExcludeAmbiguous] = useState<boolean>(false);
-  const [password, setPassword] = useState<string>('');
+  const [password, setPassword] = useState<string>(() =>
+    createSecurePassword(20, true, true, true, true, false)
+  );
   const [copied, setCopied] = useState<boolean>(false);
 
-  const generatePassword = useCallback(() => {
-    let charset = '';
-    const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const lower = 'abcdefghijklmnopqrstuvwxyz';
-    const numbers = '0123456789';
-    const symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
-
-    if (includeUpper) charset += upper;
-    if (includeLower) charset += lower;
-    if (includeNumbers) charset += numbers;
-    if (includeSymbols) charset += symbols;
-
-    if (excludeAmbiguous) {
-      // Exclude easily confused chars: 1, l, I, 0, O, o, and quotes/brackets
-      charset = charset.replace(/[1lI0Oo`'"~,;:.<>{}[\]()/\\]/g, '');
-    }
-
-    if (!charset) {
-      setPassword('');
-      return;
-    }
-
-    // Cryptographically secure generation
-    const randomValues = new Uint32Array(length);
-    crypto.getRandomValues(randomValues);
-
-    let result = '';
-    for (let i = 0; i < length; i++) {
-      result += charset[randomValues[i] % charset.length];
-    }
-
-    setPassword(result);
+  const handleRegenerate = useCallback(() => {
+    setPassword(
+      createSecurePassword(
+        length,
+        includeUpper,
+        includeLower,
+        includeNumbers,
+        includeSymbols,
+        excludeAmbiguous
+      )
+    );
   }, [length, includeUpper, includeLower, includeNumbers, includeSymbols, excludeAmbiguous]);
-
-  useEffect(() => {
-    generatePassword();
-  }, [generatePassword]);
 
   const handleCopy = () => {
     if (!password) return;
@@ -85,7 +92,7 @@ export const PasswordGenerator: React.FC = () => {
       description="Generate cryptographically strong passwords locally with browser randomness."
       icon={Lock}
       actions={
-        <button className="btn btn-primary btn-sm" onClick={generatePassword}>
+        <button className="btn btn-primary btn-sm" onClick={handleRegenerate}>
           <RefreshCw size={13} />
           <span>Regenerate Password</span>
         </button>

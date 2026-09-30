@@ -79,7 +79,7 @@ export const JsonFormatter: React.FC = () => {
       const parsed = JSON.parse(input);
       setInput(JSON.stringify(parsed));
       showToast('Minified JSON', 'info', 1500);
-    } catch (err: any) {
+    } catch {
       showToast('Cannot minify: Invalid JSON', 'error', 2500);
     }
   };

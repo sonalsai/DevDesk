@@ -1,35 +1,35 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { ToolLayout } from '../common/ToolLayout';
 import { Fingerprint, RefreshCw, Copy, Check, Download } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
+
+function createUuidList(total: number, upper: boolean, hyphens: boolean): string[] {
+  const list: string[] = [];
+  for (let i = 0; i < total; i++) {
+    let id: string = crypto.randomUUID();
+    if (!hyphens) {
+      id = id.replace(/-/g, '');
+    }
+    if (upper) {
+      id = id.toUpperCase();
+    }
+    list.push(id);
+  }
+  return list;
+}
 
 export const UuidGenerator: React.FC = () => {
   const { showToast } = useToast();
   const [count, setCount] = useState<number>(5);
   const [uppercase, setUppercase] = useState<boolean>(false);
   const [hyphenated, setHyphenated] = useState<boolean>(true);
-  const [uuids, setUuids] = useState<string[]>([]);
+  const [uuids, setUuids] = useState<string[]>(() => createUuidList(5, false, true));
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [copiedAll, setCopiedAll] = useState<boolean>(false);
 
   const generateUuids = useCallback(() => {
-    const list: string[] = [];
-    for (let i = 0; i < count; i++) {
-      let id: string = crypto.randomUUID();
-      if (!hyphenated) {
-        id = id.replace(/-/g, '');
-      }
-      if (uppercase) {
-        id = id.toUpperCase();
-      }
-      list.push(id);
-    }
-    setUuids(list);
+    setUuids(createUuidList(count, uppercase, hyphenated));
   }, [count, uppercase, hyphenated]);
-
-  useEffect(() => {
-    generateUuids();
-  }, [generateUuids]);
 
   const copyIndividual = (uuid: string, index: number) => {
     navigator.clipboard.writeText(uuid);

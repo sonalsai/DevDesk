@@ -127,7 +127,7 @@ export const RegexTester: React.FC = () => {
     } catch (err: any) {
       return { matches: [], error: err.message, highlightedHtml: escapeHtml(testString) };
     }
-  }, [pattern, flags, testString]);
+  }, [pattern, flags, testString, flagG]);
 
   function escapeHtml(text: string): string {
     return text

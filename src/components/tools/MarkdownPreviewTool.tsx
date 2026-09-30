@@ -73,7 +73,7 @@ function parseMarkdownToHtml(md: string): string {
   html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
 
   // Blockquotes
-  html = html.replace(/^\&gt; (.*$)/gim, '<blockquote>$1</blockquote>');
+  html = html.replace(/^&gt; (.*$)/gim, '<blockquote>$1</blockquote>');
 
   // Horizontal rules
   html = html.replace(/^(?:---|\*\*\*|___)\s*$/gim, '<hr style="border:none;border-top:1px solid var(--border-subtle);margin:16px 0;"/>');

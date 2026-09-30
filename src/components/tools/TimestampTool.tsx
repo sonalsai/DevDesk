@@ -5,13 +5,17 @@ import { useToast } from '../../context/ToastContext';
 
 export const TimestampTool: React.FC = () => {
   const { showToast } = useToast();
-  const [currentNow, setCurrentNow] = useState<number>(Date.now());
+  const [currentNow, setCurrentNow] = useState<number>(() => Date.now());
   const [isLive, setIsLive] = useState<boolean>(true);
 
   // Converter state
-  const [timestampInput, setTimestampInput] = useState<string>(Math.floor(Date.now() / 1000).toString());
+  const [timestampInput, setTimestampInput] = useState<string>(() =>
+    Math.floor(Date.now() / 1000).toString()
+  );
   const [isMs, setIsMs] = useState<boolean>(false);
-  const [dateInput, setDateInput] = useState<string>(new Date().toISOString().slice(0, 16));
+  const [dateInput, setDateInput] = useState<string>(() =>
+    new Date().toISOString().slice(0, 16)
+  );
 
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
