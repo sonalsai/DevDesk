@@ -877,15 +877,6 @@ h3 {
   box-shadow: 0 16px 30px -12px rgba(0, 0, 0, 0.5);
 }
 
-.hero-kbd {
-  margin-left: 4px;
-  padding: 2px 7px;
-  border-radius: var(--radius-sm);
-  background: #eef0f8;
-  color: #4b4f6e;
-  font-size: 11px;
-}
-
 .hero-btn-ghost {
   background: rgba(23, 24, 61, 0.28);
   color: #ffffff;
@@ -1309,7 +1300,9 @@ h3 {
 
 /* Scratchpad preview */
 .scratchpad-preview-box {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
   width: 100%;
   text-align: left;
   background-color: var(--bg-code);

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 import { Modal } from '../common/Modal';
+import { EmptyState } from '../common/EmptyState';
 
 export const ProjectsView: React.FC = () => {
   const {
@@ -449,6 +450,16 @@ export const ProjectsView: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {data.projects.length === 0 && (
+        <EmptyState
+          icon={FolderKanban}
+          title="No projects yet"
+          description="Group related tasks, snippets, notes and links into a project workspace."
+          actionLabel="Create your first project"
+          onAction={openCreateModal}
+        />
+      )}
 
       <div className="projects-grid">
         {data.projects.map((proj) => {

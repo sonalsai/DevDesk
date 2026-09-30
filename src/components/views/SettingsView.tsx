@@ -57,7 +57,7 @@ export const SettingsView: React.FC = () => {
 
   const handleClearData = () => {
     resetToDefaults();
-    showToast('DevDesk reset to default workspace', 'info', 2000);
+    showToast('Workspace cleared', 'info', 2000);
   };
 
   return (
@@ -316,7 +316,7 @@ export const SettingsView: React.FC = () => {
             <span className="settings-title" style={{ color: 'var(--danger)' }}>
               Reset Workspace Data
             </span>
-            <span className="settings-desc">Clear all tasks, notes, snippets, and return to default starter state.</span>
+            <span className="settings-desc">Delete all tasks, notes, snippets, projects, favorites and history.</span>
           </div>
 
           <button
@@ -335,7 +335,7 @@ export const SettingsView: React.FC = () => {
         onClose={() => setShowClearConfirm(false)}
         onConfirm={handleClearData}
         title="Reset All Workspace Data?"
-        message="This action will delete your current tasks, custom snippets, scratchpad content, and project records, restoring DevDesk to initial starter defaults. Make sure you have exported a backup if you need to keep your data."
+        message="This deletes all your tasks, snippets, scratchpad notes, projects, favorites and history, leaving an empty workspace. Export a backup first if you need to keep your data."
         confirmLabel="Reset Everything"
         isDestructive
       />

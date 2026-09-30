@@ -10,7 +10,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   Plus,
-  Search,
   FolderKanban,
   Code2,
   Zap,
@@ -28,7 +27,6 @@ export const HomeDashboard: React.FC = () => {
     isToolFavorite,
     toggleFavoriteTool,
     recordHistory,
-    setIsCommandPaletteOpen,
   } = useWorkspace();
   const { showToast } = useToast();
 
@@ -45,7 +43,6 @@ export const HomeDashboard: React.FC = () => {
     month: 'long',
     day: 'numeric',
   });
-  const modKey = navigator.userAgent.toUpperCase().includes('MAC') ? '⌘' : 'Ctrl';
 
   const incompleteTasks = data.tasks.filter((t) => t.status !== 'done');
   const doneCount = data.tasks.length - incompleteTasks.length;
@@ -138,12 +135,7 @@ export const HomeDashboard: React.FC = () => {
           </div>
 
           <div className="hero-actions">
-            <button className="hero-btn hero-btn-primary" onClick={() => setIsCommandPaletteOpen(true)}>
-              <Search size={15} />
-              <span>Search everything</span>
-              <kbd className="hero-kbd">{modKey} K</kbd>
-            </button>
-            <button className="hero-btn hero-btn-ghost" onClick={handleNewTask}>
+            <button className="hero-btn hero-btn-primary" onClick={handleNewTask}>
               <Plus size={15} />
               <span>New task</span>
             </button>
@@ -274,7 +266,7 @@ export const HomeDashboard: React.FC = () => {
               ))
             ) : (
               <div className="panel-empty">
-                <span>All caught up! No pending tasks.</span>
+                <span>{data.tasks.length === 0 ? 'No tasks yet.' : 'All caught up! No pending tasks.'}</span>
                 <button className="btn btn-secondary btn-sm" onClick={handleNewTask}>
                   <Plus size={13} />
                   <span>Add a task</span>
