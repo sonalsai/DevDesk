@@ -3,7 +3,7 @@ import { useWorkspace } from '@/hooks';
 import { TOOLS_REGISTRY } from '../../registry/toolsRegistry';
 import {
   Search,
-  Sparkles,
+  Home,
   Plus,
   FileText,
   CheckSquare,
@@ -418,7 +418,7 @@ export const CommandPalette: React.FC = () => {
       title: 'Home Dashboard',
       subtitle: 'Developer overview',
       category: 'Navigation',
-      icon: Sparkles,
+      icon: Home,
       onSelect: () => {
         setActiveView('dashboard');
         setIsCommandPaletteOpen(false);

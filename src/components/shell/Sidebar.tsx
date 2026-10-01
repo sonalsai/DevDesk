@@ -4,7 +4,7 @@ import { TOOLS_REGISTRY } from '../../registry/toolsRegistry';
 import {
   PanelLeftClose,
   PanelLeftOpen,
-  Sparkles,
+  Home,
   FileText,
   CheckSquare,
   FolderKanban,
@@ -69,7 +69,7 @@ export const Sidebar: React.FC = () => {
             title="Home Dashboard"
           >
             <div className="nav-item-left">
-              <Sparkles size={16} />
+              <Home size={16} />
               <span className="nav-item-label">Home</span>
             </div>
           </button>

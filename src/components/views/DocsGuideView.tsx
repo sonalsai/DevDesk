@@ -18,6 +18,7 @@ import {
   FolderKanban,
   ExternalLink,
   Cpu,
+  Home,
 } from 'lucide-react';
 import { useWorkspace } from '@/hooks/useWorkspace';
 import { TOOLS_REGISTRY } from '@/registry/toolsRegistry';
@@ -297,7 +298,7 @@ export const DocsGuideView: React.FC = () => {
                 style={{ padding: '16px', borderRadius: '10px', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', cursor: 'pointer' }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                  <Sparkles size={16} style={{ color: 'var(--accent)' }} />
+                  <Home size={16} style={{ color: 'var(--accent)' }} />
                   <strong style={{ fontSize: '14px' }}>Home Dashboard</strong>
                 </div>
                 <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
@@ -684,8 +685,78 @@ export const DocsGuideView: React.FC = () => {
               </button>
             </div>
             <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>
-              Subscribe to HTTP event streams using native EventSource. Filter by custom named events and inspect live telemetry feeds.
+              Subscribe to persistent HTTP event streams using native EventSource. Filter custom events, inspect structured telemetry, and monitor live streaming payloads.
             </p>
+          </div>
+
+          {/* VISUAL SNAPSHOT CARD: SSE */}
+          <div
+            style={{
+              background: 'var(--bg-card)',
+              borderRadius: '12px',
+              border: '1px solid var(--border-subtle)',
+              overflow: 'hidden',
+              boxShadow: 'var(--shadow-sm)',
+            }}
+          >
+            <div
+              style={{
+                background: 'var(--bg-subtle)',
+                padding: '10px 16px',
+                borderBottom: '1px solid var(--border-subtle)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '12px',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} />
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+              </div>
+              <span style={{ marginLeft: '8px', fontWeight: 600 }}>Visual Snapshot: Live EventSource Stream & Message Feed</span>
+            </div>
+
+            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--bg-subtle)', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
+                <span style={{ background: '#3b82f6', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700 }}>SSE</span>
+                <span style={{ fontFamily: 'monospace', fontSize: '13px', flex: 1, color: 'var(--text-primary)' }}>https://api.devdesk.local/v1/telemetry/stream</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600 }}>
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} /> Connected (200 OK)
+                </span>
+              </div>
+
+              <div style={{ background: 'var(--bg-app)', borderRadius: '8px', border: '1px solid var(--border-subtle)', overflow: 'hidden' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '120px 140px 1fr 80px', padding: '8px 14px', background: 'var(--bg-subtle)', borderBottom: '1px solid var(--border-subtle)', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  <span>TIME</span>
+                  <span>EVENT TYPE</span>
+                  <span>PAYLOAD (DATA)</span>
+                  <span style={{ textAlign: 'right' }}>ACTION</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', fontSize: '12px', fontFamily: 'monospace' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '120px 140px 1fr 80px', padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)', alignItems: 'center' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>12:45:02.108</span>
+                    <span style={{ color: '#10b981', fontWeight: 600 }}>payment_succeeded</span>
+                    <span style={{ color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{`{"amount": 89.00, "customer": "cus_9942", "currency": "USD"}`}</span>
+                    <span style={{ textAlign: 'right', color: 'var(--accent)', cursor: 'pointer', fontSize: '11px' }}>Copy</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '120px 140px 1fr 80px', padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)', alignItems: 'center', background: 'rgba(99, 102, 241, 0.03)' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>12:45:01.850</span>
+                    <span style={{ color: '#6366f1', fontWeight: 600 }}>token_generated</span>
+                    <span style={{ color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{`{"token_id": "tok_live_7x", "expires_in": 3600}`}</span>
+                    <span style={{ textAlign: 'right', color: 'var(--accent)', cursor: 'pointer', fontSize: '11px' }}>Copy</span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '120px 140px 1fr 80px', padding: '10px 14px', alignItems: 'center' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>12:44:59.200</span>
+                    <span style={{ color: 'var(--text-secondary)' }}>ping</span>
+                    <span style={{ color: 'var(--text-muted)' }}>{`{"heartbeat": true, "timestamp": 1727786700}`}</span>
+                    <span style={{ textAlign: 'right', color: 'var(--accent)', cursor: 'pointer', fontSize: '11px' }}>Copy</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div
@@ -733,6 +804,106 @@ export const DocsGuideView: React.FC = () => {
             <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>
               Introspect remote schemas, click fields in the visual tree to auto-construct queries, and inspect clean <code>data</code> vs <code>errors</code>.
             </p>
+          </div>
+
+          {/* VISUAL SNAPSHOT CARD: GraphQL */}
+          <div
+            style={{
+              background: 'var(--bg-card)',
+              borderRadius: '12px',
+              border: '1px solid var(--border-subtle)',
+              overflow: 'hidden',
+              boxShadow: 'var(--shadow-sm)',
+            }}
+          >
+            <div
+              style={{
+                background: 'var(--bg-subtle)',
+                padding: '10px 16px',
+                borderBottom: '1px solid var(--border-subtle)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '12px',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} />
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+              </div>
+              <span style={{ marginLeft: '8px', fontWeight: 600 }}>Visual Snapshot: Schema Tree, Query Editor & Response Inspector</span>
+            </div>
+
+            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ background: '#e11d48', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700 }}>GQL</span>
+                <div style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', background: 'var(--bg-subtle)', border: '1px solid var(--border-subtle)', fontFamily: 'monospace', fontSize: '13px' }}>
+                  https://api.spacex.land/graphql
+                </div>
+                <span style={{ background: 'var(--accent)', color: '#fff', padding: '8px 14px', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>
+                  Introspect Schema
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr 1fr', gap: '12px', minHeight: '210px' }}>
+                {/* Schema Explorer */}
+                <div style={{ background: 'var(--bg-subtle)', borderRadius: '8px', padding: '12px', border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Schema Explorer (Query)
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', fontFamily: 'monospace' }}>
+                    <div style={{ color: 'var(--accent)', fontWeight: 600 }}>▾ launchesPast</div>
+                    <div style={{ paddingLeft: '14px', color: '#10b981', cursor: 'pointer' }}>✓ id: ID</div>
+                    <div style={{ paddingLeft: '14px', color: '#10b981', cursor: 'pointer' }}>✓ mission_name: String</div>
+                    <div style={{ paddingLeft: '14px', color: 'var(--accent)', cursor: 'pointer' }}>▸ rocket: Rocket</div>
+                    <div style={{ color: 'var(--text-muted)' }}>▸ dragons</div>
+                    <div style={{ color: 'var(--text-muted)' }}>▸ ships</div>
+                  </div>
+                </div>
+
+                {/* Query Editor */}
+                <div style={{ background: 'var(--bg-app)', borderRadius: '8px', padding: '12px', border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '11px', color: 'var(--text-secondary)' }}>
+                    <span style={{ fontWeight: 600 }}>GRAPHQL DOCUMENT</span>
+                    <span>Prettify</span>
+                  </div>
+                  <pre style={{ margin: 0, fontSize: '12px', fontFamily: 'monospace', color: 'var(--text-primary)' }}>
+{`query GetLaunches {
+  launchesPast(limit: 2) {
+    id
+    mission_name
+    rocket {
+      rocket_name
+    }
+  }
+}`}
+                  </pre>
+                </div>
+
+                {/* Response View */}
+                <div style={{ background: 'var(--bg-app)', borderRadius: '8px', padding: '12px', border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '11px' }}>
+                    <span style={{ color: '#10b981', fontWeight: 700 }}>200 OK • 52ms</span>
+                    <span style={{ color: 'var(--text-muted)' }}>1.2 kB</span>
+                  </div>
+                  <pre style={{ margin: 0, fontSize: '12px', fontFamily: 'monospace', color: 'var(--text-primary)' }}>
+{`{
+  "data": {
+    "launchesPast": [
+      {
+        "id": "109",
+        "mission_name": "Starlink-15",
+        "rocket": { "rocket_name": "Falcon 9" }
+      }
+    ]
+  }
+}`}
+                  </pre>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div
@@ -863,6 +1034,80 @@ export const DocsGuideView: React.FC = () => {
             </p>
           </div>
 
+          {/* VISUAL SNAPSHOT CARD: OpenAPI */}
+          <div
+            style={{
+              background: 'var(--bg-card)',
+              borderRadius: '12px',
+              border: '1px solid var(--border-subtle)',
+              overflow: 'hidden',
+              boxShadow: 'var(--shadow-sm)',
+            }}
+          >
+            <div
+              style={{
+                background: 'var(--bg-subtle)',
+                padding: '10px 16px',
+                borderBottom: '1px solid var(--border-subtle)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '12px',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} />
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+              </div>
+              <span style={{ marginLeft: '8px', fontWeight: 600 }}>Visual Snapshot: OpenAPI 3.1 Specification Explorer & Operations</span>
+            </div>
+
+            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-subtle)', padding: '10px 14px', borderRadius: '8px' }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '14px' }}>Petstore Store API <span style={{ fontSize: '11px', background: 'var(--accent)', color: '#fff', padding: '2px 6px', borderRadius: '4px', marginLeft: '6px' }}>v3.1.0</span></div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Parsed from Swagger YAML • 14 Endpoints • 4 Data Schemas</div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <span style={{ fontSize: '11px', padding: '4px 8px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', borderRadius: '4px', fontWeight: 600 }}>
+                    Mapped Env: {'{{base_url}}'} = https://petstore3.swagger.io
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ background: '#10b981', color: '#fff', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700 }}>GET</span>
+                    <span style={{ fontFamily: 'monospace', fontSize: '13px' }}>/pet/findByStatus</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Finds Pets by status tags</span>
+                  </div>
+                  <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '11px' }}>Open in API Client</button>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ background: '#3b82f6', color: '#fff', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700 }}>POST</span>
+                    <span style={{ fontFamily: 'monospace', fontSize: '13px' }}>/pet</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Add a new pet to store</span>
+                  </div>
+                  <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '11px' }}>Open in API Client</button>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ background: '#ef4444', color: '#fff', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 700 }}>DELETE</span>
+                    <span style={{ fontFamily: 'monospace', fontSize: '13px' }}>/pet/:petId</span>
+                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Deletes a pet by ID</span>
+                  </div>
+                  <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '11px' }}>Open in API Client</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
             <div style={{ background: 'var(--bg-card)', borderRadius: '10px', padding: '18px', border: '1px solid var(--border-subtle)' }}>
               <h4 style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 8px 0', color: 'var(--accent)' }}>Import from JSON, YAML, or URL</h4>
@@ -903,6 +1148,85 @@ export const DocsGuideView: React.FC = () => {
             <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>
               Verify response status, headers, latency thresholds, and nested JSONPath values with synchronous, non-evaluating assertions.
             </p>
+          </div>
+
+          {/* VISUAL SNAPSHOT CARD: Assertions & Testing */}
+          <div
+            style={{
+              background: 'var(--bg-card)',
+              borderRadius: '12px',
+              border: '1px solid var(--border-subtle)',
+              overflow: 'hidden',
+              boxShadow: 'var(--shadow-sm)',
+            }}
+          >
+            <div
+              style={{
+                background: 'var(--bg-subtle)',
+                padding: '10px 16px',
+                borderBottom: '1px solid var(--border-subtle)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '12px',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} />
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
+                <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+              </div>
+              <span style={{ marginLeft: '8px', fontWeight: 600 }}>Visual Snapshot: Test Runner Suite & Request Chaining</span>
+            </div>
+
+            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-subtle)', padding: '10px 14px', borderRadius: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 700 }}>
+                    ✓ 3 / 3 Assertions Passed
+                  </span>
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Execution Time: 78ms</span>
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--accent)', fontWeight: 600 }}>
+                  Chaining Active: 1 Variable Extracted
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontFamily: 'monospace', fontSize: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ color: '#10b981', fontWeight: 700 }}>✓ PASS</span>
+                    <span>Status Code == 200</span>
+                  </div>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>Received: 200 OK</span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ color: '#10b981', fontWeight: 700 }}>✓ PASS</span>
+                    <span>Response Time &lt; 300ms</span>
+                  </div>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>Elapsed: 78ms</span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--bg-app)', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ color: '#10b981', fontWeight: 700 }}>✓ PASS</span>
+                    <span>JSONPath $.data.auth.token exists</span>
+                  </div>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>Found: "eyJhbGciOi..."</span>
+                </div>
+              </div>
+
+              {/* Chaining preview bar */}
+              <div style={{ background: 'rgba(99, 102, 241, 0.05)', padding: '10px 14px', borderRadius: '6px', border: '1px dashed var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px' }}>
+                <div>
+                  <strong>Request Chaining:</strong> Extract <code>$.data.auth.token</code> → Write to <code>{'{{AUTH_TOKEN}}'}</code>
+                </div>
+                <span style={{ color: 'var(--accent)', fontWeight: 600 }}>Active in Environment</span>
+              </div>
+            </div>
           </div>
 
           <div
