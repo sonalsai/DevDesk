@@ -1,8 +1,8 @@
 import React from 'react';
-import { useWorkspace } from '../../context/WorkspaceContext';
+import { useWorkspace } from '@/hooks';
 import { TOOLS_REGISTRY } from '../../registry/toolsRegistry';
 import { Star, Sparkles, Code2, FolderKanban } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 
 export const FavoritesView: React.FC = () => {
   const { data, setActiveView, removeFavorite, recordHistory } = useWorkspace();

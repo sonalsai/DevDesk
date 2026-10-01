@@ -8,7 +8,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { HTTP_STATUS_LIST } from '../../../services/httpStatusReference';
-import { useToast } from '../../../context/ToastContext';
+import { useToast } from '@/hooks';
 import type { HttpStatusInfo } from '../../../types/api';
 
 export const HttpInspectorView: React.FC = () => {
@@ -80,7 +80,7 @@ export const HttpInspectorView: React.FC = () => {
       });
 
       showToast(`Inspected URL (${response.status} ${response.statusText})`, 'success', 1500);
-    } catch (err: any) {
+    } catch {
       const elapsed = Math.round(performance.now() - startTime);
       setInspectResult({
         url: inspectUrl,

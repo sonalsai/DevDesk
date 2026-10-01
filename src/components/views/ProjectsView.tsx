@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useWorkspace } from '../../context/WorkspaceContext';
+import { useWorkspace } from '@/hooks';
 import type { Project, ProjectLink } from '../../types';
+import { generateUniqueId } from '../../utils/date';
 import {
   FolderKanban,
   Plus,
@@ -17,7 +18,7 @@ import {
   Layers,
   Folder,
 } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 import { Modal } from '../common/Modal';
 import { EmptyState } from '../common/EmptyState';
 
@@ -108,7 +109,7 @@ export const ProjectsView: React.FC = () => {
   const handleAddLink = () => {
     if (!currentProject || !newLinkLabel.trim() || !newLinkUrl.trim()) return;
     const newLink: ProjectLink = {
-      id: `link-${Date.now()}`,
+      id: generateUniqueId('link'),
       label: newLinkLabel.trim(),
       url: newLinkUrl.trim(),
     };

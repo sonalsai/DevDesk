@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useWorkspace } from '../../context/WorkspaceContext';
+import { useWorkspace } from '@/hooks';
 import {
   Settings,
   Moon,
@@ -11,7 +11,7 @@ import {
   Shield,
   Keyboard,
 } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 import { ConfirmDialog } from '../common/ConfirmDialog';
 import { downloadWorkspaceBackup, parseImportedWorkspace } from '../../services/storage';
 

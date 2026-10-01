@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { ToolLayout } from '../common/ToolLayout';
 import { CodeEditor } from '../common/CodeEditor';
 import { Braces, CheckCircle, AlertTriangle, ArrowUpDown, ListTree, Code2 } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 
 export const JsonFormatter: React.FC = () => {
   const { showToast } = useToast();

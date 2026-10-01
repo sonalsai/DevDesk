@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { ToolLayout } from '../common/ToolLayout';
 import { Fingerprint, RefreshCw, Copy, Check, Download } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 
 function createUuidList(total: number, upper: boolean, hyphens: boolean): string[] {
   const list: string[] = [];

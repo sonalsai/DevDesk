@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ToolLayout } from '../common/ToolLayout';
 import { Hash, Copy, Check, Info } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 
 export const HashGenerator: React.FC = () => {
   const { showToast } = useToast();

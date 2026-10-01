@@ -11,18 +11,19 @@ import { generateCodeSnippet } from '../src/services/codeGenerator';
 import { migrateWorkspaceData } from '../src/services/storage';
 import type { Environment, ApiRequest, ApiResponse } from '../src/types/api';
 
+const sampleEnv: Environment = {
+  id: 'env-test',
+  name: 'Testing',
+  variables: [
+    { id: 'v1', key: 'base_url', value: 'https://api.example.com', isSecret: false, enabled: true },
+    { id: 'v2', key: 'api_token', value: 'secret_token_123', isSecret: true, enabled: true },
+    { id: 'v3', key: 'disabled_var', value: 'ignore_me', isSecret: false, enabled: false },
+  ],
+  createdAt: '2026-01-01',
+  updatedAt: '2026-01-01',
+};
+
 describe('Environment Service & Variable Interpolation', () => {
-  const sampleEnv: Environment = {
-    id: 'env-test',
-    name: 'Testing',
-    variables: [
-      { id: 'v1', key: 'base_url', value: 'https://api.example.com', isSecret: false, enabled: true },
-      { id: 'v2', key: 'api_token', value: 'secret_token_123', isSecret: true, enabled: true },
-      { id: 'v3', key: 'disabled_var', value: 'ignore_me', isSecret: false, enabled: false },
-    ],
-    createdAt: '2026-01-01',
-    updatedAt: '2026-01-01',
-  };
 
   it('interpolates enabled environment variables', () => {
     const input = '{{base_url}}/users?token={{api_token}}';
@@ -195,6 +196,27 @@ describe('Security & Sensitive Data History Sanitization', () => {
 
     const headers = buildResolvedHeaders(request);
     expect(headers['Authorization']).toBe('Bearer my_token');
+  });
+
+  it('builds resolved url with query params and environment variables', () => {
+    const request: ApiRequest = {
+      id: 'req-url-test',
+      name: 'Url Test',
+      method: 'GET',
+      url: '{{base_url}}/items',
+      params: [
+        { id: 'p1', key: 'sort', value: 'desc', enabled: true },
+        { id: 'p2', key: 'skip', value: '10', enabled: false },
+      ],
+      headers: [],
+      body: { type: 'none', rawText: '', jsonContent: '', formParams: [], multipartParams: [] },
+      auth: { type: 'none' },
+      createdAt: '2026-01-01',
+      updatedAt: '2026-01-01',
+    };
+
+    const resolved = buildResolvedUrl(request, sampleEnv);
+    expect(resolved).toBe('https://api.example.com/items?sort=desc');
   });
 });
 

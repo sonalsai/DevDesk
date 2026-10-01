@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useWorkspace } from '../../context/WorkspaceContext';
+import React, { useState, useRef, useMemo } from 'react';
+import { useWorkspace } from '@/hooks';
 import { TOOLS_REGISTRY } from '../../registry/toolsRegistry';
 import {
   Search,
@@ -22,7 +22,7 @@ import {
   Webhook,
   Globe,
 } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 
 interface PaletteItem {
   id: string;
@@ -54,13 +54,6 @@ export const CommandPalette: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Reset on open (the input focuses itself via autoFocus as it mounts, so no keystrokes are lost)
-  useEffect(() => {
-    if (isCommandPaletteOpen) {
-      setQuery('');
-      setSelectedIndex(0);
-    }
-  }, [isCommandPaletteOpen]);
 
   // Construct items
   const allItems = useMemo<PaletteItem[]>(() => {
@@ -382,10 +375,6 @@ export const CommandPalette: React.FC = () => {
     });
   }, [allItems, query]);
 
-  // Keep selected index in bounds
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [query]);
 
   // Keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -425,7 +414,10 @@ export const CommandPalette: React.FC = () => {
             className="palette-input"
             placeholder="Type a command, tool, or search (e.g. json, jwt, task)..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setSelectedIndex(0);
+            }}
             onKeyDown={handleKeyDown}
           />
           <span className="kbd-shortcut">Esc</span>

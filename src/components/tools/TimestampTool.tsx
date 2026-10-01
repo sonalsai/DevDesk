@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ToolLayout } from '../common/ToolLayout';
 import { Clock, Play, Pause, Copy, Check } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 
 export const TimestampTool: React.FC = () => {
   const { showToast } = useToast();
@@ -57,7 +57,7 @@ export const TimestampTool: React.FC = () => {
   const dtDate = parsedFromDate();
 
   const getRelativeTime = (d: Date) => {
-    const diff = Date.now() - d.getTime();
+    const diff = currentNow - d.getTime();
     const absDiff = Math.abs(diff);
     const isPast = diff > 0;
     const minutes = Math.floor(absDiff / 60000);

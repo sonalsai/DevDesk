@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronRight, ChevronDown, Copy, Check } from 'lucide-react';
-import { useToast } from '../../../context/ToastContext';
+import { useToast } from '@/hooks';
 
 interface JsonPathExplorerProps {
   data: any;

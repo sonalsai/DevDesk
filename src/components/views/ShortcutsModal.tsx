@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal } from '../common/Modal';
-import { useWorkspace } from '../../context/WorkspaceContext';
+import { useWorkspace } from '@/hooks';
 
 interface ShortcutRow {
   keys: string[];

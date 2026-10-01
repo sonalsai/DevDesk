@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { ToolLayout } from '../common/ToolLayout';
 import { CodeEditor } from '../common/CodeEditor';
 import { Minimize2, TrendingDown, CheckCircle, AlertTriangle } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 
 export const JsonMinifier: React.FC = () => {
   const { showToast } = useToast();

@@ -1,27 +1,14 @@
 import React from 'react';
-import { useWorkspace } from '../../context/WorkspaceContext';
+import { useWorkspace } from '@/hooks';
 import { TOOLS_REGISTRY } from '../../registry/toolsRegistry';
 import { Clock, Trash2, Sparkles, Code2, FolderKanban, ShieldCheck } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
+
+import { formatRelativeTime } from '../../utils/date';
 
 export const RecentView: React.FC = () => {
   const { data, clearHistory, setActiveView, recordHistory } = useWorkspace();
   const { showToast } = useToast();
-
-  const formatRelativeTime = (timestamp: string) => {
-    const diff = Date.now() - new Date(timestamp).getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    if (minutes < 1) return 'Just now';
-    if (minutes === 1) return '1 minute ago';
-    if (minutes < 60) return `${minutes} minutes ago`;
-    if (hours === 1) return '1 hour ago';
-    if (hours < 24) return `${hours} hours ago`;
-    if (days === 1) return 'Yesterday';
-    return `${days} days ago`;
-  };
 
   const handleOpenItem = (item: (typeof data.history)[0]) => {
     if (item.type === 'tool') {

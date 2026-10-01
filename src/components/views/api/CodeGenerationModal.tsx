@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal } from '../../common/Modal';
 import type { ApiRequest, Environment } from '../../../types/api';
 import { generateCodeSnippet, type SupportedLanguage } from '../../../services/codeGenerator';
-import { useToast } from '../../../context/ToastContext';
+import { useToast } from '@/hooks';
 import { Copy, Check } from 'lucide-react';
 
 interface CodeGenerationModalProps {

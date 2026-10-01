@@ -1,25 +1,29 @@
-import React, { useEffect } from 'react';
-import { useWorkspace } from '../../context/WorkspaceContext';
+import React, { useEffect, Suspense, lazy } from 'react';
+import { useWorkspace } from '@/hooks';
 import { TopBar } from './TopBar';
 import { Sidebar } from './Sidebar';
 import { CommandPalette } from './CommandPalette';
 import { ShortcutsModal } from '../views/ShortcutsModal';
 import { PrivacyModal } from '../views/PrivacyModal';
+import { ErrorBoundary, LoadingFallback } from '../common';
 
+// Instant critical path views
 import { HomeDashboard } from '../views/HomeDashboard';
 import { ScratchpadView } from '../views/ScratchpadView';
 import { TasksView } from '../views/TasksView';
-import { ProjectsView } from '../views/ProjectsView';
-import { SnippetsView } from '../views/SnippetsView';
-import { AllToolsView } from '../views/AllToolsView';
-import { FavoritesView } from '../views/FavoritesView';
-import { RecentView } from '../views/RecentView';
-import { SettingsView } from '../views/SettingsView';
-import { ApiClientView } from '../views/api/ApiClientView';
-import { CollectionsManagerView } from '../views/api/CollectionsManagerView';
-import { EnvironmentsView } from '../views/api/EnvironmentsView';
-import { WebhookInspectorView } from '../views/api/WebhookInspectorView';
-import { HttpInspectorView } from '../views/api/HttpInspectorView';
+
+// Code-split extended workspace views for fast first-paint
+const ProjectsView = lazy(() => import('../views/ProjectsView').then((m) => ({ default: m.ProjectsView })));
+const SnippetsView = lazy(() => import('../views/SnippetsView').then((m) => ({ default: m.SnippetsView })));
+const AllToolsView = lazy(() => import('../views/AllToolsView').then((m) => ({ default: m.AllToolsView })));
+const FavoritesView = lazy(() => import('../views/FavoritesView').then((m) => ({ default: m.FavoritesView })));
+const RecentView = lazy(() => import('../views/RecentView').then((m) => ({ default: m.RecentView })));
+const SettingsView = lazy(() => import('../views/SettingsView').then((m) => ({ default: m.SettingsView })));
+const ApiClientView = lazy(() => import('../views/api/ApiClientView').then((m) => ({ default: m.ApiClientView })));
+const CollectionsManagerView = lazy(() => import('../views/api/CollectionsManagerView').then((m) => ({ default: m.CollectionsManagerView })));
+const EnvironmentsView = lazy(() => import('../views/api/EnvironmentsView').then((m) => ({ default: m.EnvironmentsView })));
+const WebhookInspectorView = lazy(() => import('../views/api/WebhookInspectorView').then((m) => ({ default: m.WebhookInspectorView })));
+const HttpInspectorView = lazy(() => import('../views/api/HttpInspectorView').then((m) => ({ default: m.HttpInspectorView })));
 
 import { getToolById } from '../../registry/toolsRegistry';
 
@@ -39,6 +43,13 @@ export const AppShell: React.FC = () => {
     goBack,
     goForward,
   } = useWorkspace();
+
+  // Listen for navigation fallback events from ErrorBoundary
+  useEffect(() => {
+    const handleNavigateHome = () => setActiveView('dashboard');
+    window.addEventListener('devdesk:navigate-home', handleNavigateHome);
+    return () => window.removeEventListener('devdesk:navigate-home', handleNavigateHome);
+  }, [setActiveView]);
 
   // Keyboard navigation & global shortcuts
   useEffect(() => {
@@ -150,7 +161,13 @@ export const AppShell: React.FC = () => {
         const tool = selectedToolId ? getToolById(selectedToolId) : null;
         if (!tool) return <AllToolsView />;
         const ToolComponent = tool.component;
-        return <ToolComponent />;
+        return (
+          <ErrorBoundary componentName={tool.name} onReset={() => setActiveView('all-tools')}>
+            <Suspense fallback={<LoadingFallback label={`Loading ${tool.name}...`} />}>
+              <ToolComponent />
+            </Suspense>
+          </ErrorBoundary>
+        );
       }
       case 'favorites':
         return <FavoritesView />;
@@ -183,7 +200,11 @@ export const AppShell: React.FC = () => {
         <TopBar />
 
         <main className="main-workspace" id="main-content">
-          {renderContent()}
+          <ErrorBoundary onReset={() => setActiveView('dashboard')}>
+            <Suspense fallback={<LoadingFallback label="Loading view..." />}>
+              {renderContent()}
+            </Suspense>
+          </ErrorBoundary>
         </main>
       </div>
 

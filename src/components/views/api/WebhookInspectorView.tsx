@@ -9,8 +9,8 @@ import {
   Radio,
   Check,
 } from 'lucide-react';
-import { useWorkspace } from '../../../context/WorkspaceContext';
-import { useToast } from '../../../context/ToastContext';
+import { useWorkspace } from '@/hooks';
+import { useToast } from '@/hooks';
 import type { WebhookEvent, WebhookSession } from '../../../types/api';
 
 export const WebhookInspectorView: React.FC = () => {

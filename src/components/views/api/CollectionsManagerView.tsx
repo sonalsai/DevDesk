@@ -13,8 +13,8 @@ import {
   Check,
   RotateCcw,
 } from 'lucide-react';
-import { useWorkspace } from '../../../context/WorkspaceContext';
-import { useToast } from '../../../context/ToastContext';
+import { useWorkspace } from '@/hooks';
+import { useToast } from '@/hooks';
 import type { ApiHistoryItem } from '../../../types/api';
 
 export const CollectionsManagerView: React.FC = () => {

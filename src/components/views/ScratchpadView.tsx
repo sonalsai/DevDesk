@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useWorkspace } from '../../context/WorkspaceContext';
+import { useWorkspace } from '@/hooks';
 import {
   FileText,
   Pin,
@@ -14,7 +14,7 @@ import {
   CheckSquare,
   Code,
 } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 import { ConfirmDialog } from '../common/ConfirmDialog';
 
 export const ScratchpadView: React.FC = () => {

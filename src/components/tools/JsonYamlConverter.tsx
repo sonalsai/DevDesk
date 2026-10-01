@@ -3,7 +3,7 @@ import { ToolLayout } from '../common/ToolLayout';
 import { CodeEditor } from '../common/CodeEditor';
 import { RefreshCw, ArrowRightLeft, AlertTriangle } from 'lucide-react';
 import YAML from 'yaml';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 
 export const JsonYamlConverter: React.FC = () => {
   const { showToast } = useToast();

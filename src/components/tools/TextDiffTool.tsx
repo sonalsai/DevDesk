@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ToolLayout } from '../common/ToolLayout';
 import { GitCompare, Plus, Minus, ArrowRightLeft } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 
 interface DiffLine {
   type: 'added' | 'removed' | 'unchanged';

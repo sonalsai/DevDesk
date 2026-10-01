@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useWorkspace } from '../../context/WorkspaceContext';
+import { useWorkspace } from '@/hooks';
 import type { Snippet } from '../../types';
 import {
   Code2,
@@ -12,7 +12,7 @@ import {
   Edit2,
   Search,
 } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 import { Modal } from '../common/Modal';
 
 const POPULAR_LANGUAGES = [

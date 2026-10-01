@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import type {
   WorkspaceData,
   UserSettings,
@@ -24,105 +24,16 @@ import {
   INITIAL_WORKSPACE,
   DEFAULT_API_REQUESTS,
 } from '../services/storage';
-
-interface WorkspaceContextType {
-  data: WorkspaceData;
-  activeView: ViewType;
-  selectedToolId: string | null;
-  selectedProjectId: string | null;
-  isSidebarCollapsed: boolean;
-  isCommandPaletteOpen: boolean;
-  isShortcutsOpen: boolean;
-  isPrivacyModalOpen: boolean;
-  scratchpadSaveStatus: 'saved' | 'saving' | 'idle';
-  setActiveView: (view: ViewType, options?: { toolId?: string; projectId?: string }) => void;
-  canGoBack: boolean;
-  canGoForward: boolean;
-  goBack: () => void;
-  goForward: () => void;
-  setIsSidebarCollapsed: (val: boolean | ((prev: boolean) => boolean)) => void;
-  setIsCommandPaletteOpen: (open: boolean) => void;
-  setIsShortcutsOpen: (open: boolean) => void;
-  setIsPrivacyModalOpen: (open: boolean) => void;
-
-  // Tasks
-  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => Task;
-  updateTask: (id: string, updates: Partial<Task>) => void;
-  deleteTask: (id: string) => void;
-  toggleTaskStatus: (id: string) => void;
-
-  // Snippets
-  addSnippet: (snippet: Omit<Snippet, 'id' | 'createdAt' | 'updatedAt'>) => Snippet;
-  updateSnippet: (id: string, updates: Partial<Snippet>) => void;
-  deleteSnippet: (id: string) => void;
-  duplicateSnippet: (id: string) => void;
-  toggleFavoriteSnippet: (id: string) => void;
-
-  // Projects
-  addProject: (project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => Project;
-  updateProject: (id: string, updates: Partial<Project>) => void;
-  deleteProject: (id: string) => void;
-  toggleFavoriteProject: (id: string) => void;
-
-  // Scratchpad
-  updateScratchpad: (content: string, isPinned?: boolean) => void;
-  clearScratchpad: () => void;
-
-  // Tools & Favorites
-  isToolFavorite: (toolId: string) => boolean;
-  toggleFavoriteTool: (toolId: string, title: string, subtitle?: string) => void;
-  removeFavorite: (id: string) => void;
-
-  // History
-  recordHistory: (type: 'tool' | 'snippet' | 'project', targetId: string, title: string, subtitle?: string) => void;
-  clearHistory: () => void;
-
-  // Settings & Storage
-  updateSettings: (updates: Partial<UserSettings>) => void;
-  setWorkspaceData: (newData: WorkspaceData) => void;
-  resetToDefaults: () => void;
-
-  // Phase 2: API Client & Tabs
-  apiTabs: ApiTab[];
-  activeTabId: string;
-  activeTab: ApiTab | undefined;
-  activeEnvironment: Environment | undefined;
-  setActiveEnvironmentId: (id: string) => void;
-  setActiveTabId: (tabId: string) => void;
-  openRequestInTab: (request: ApiRequest) => void;
-  createNewTab: (initial?: Partial<ApiRequest>) => void;
-  closeTab: (tabId: string) => void;
-  updateTabRequest: (tabId: string, updates: Partial<ApiRequest>) => void;
-  updateTabResponse: (tabId: string, response: ApiResponse | null) => void;
-  setTabLoading: (tabId: string, isLoading: boolean) => void;
-
-  // Phase 2: Collections & Requests
-  addCollection: (col: Omit<ApiCollection, 'id' | 'createdAt' | 'updatedAt' | 'order'>) => ApiCollection;
-  updateCollection: (id: string, updates: Partial<ApiCollection>) => void;
-  deleteCollection: (id: string) => void;
-  addApiRequest: (req: Omit<ApiRequest, 'id' | 'createdAt' | 'updatedAt'>) => ApiRequest;
-  updateApiRequest: (id: string, updates: Partial<ApiRequest>) => void;
-  deleteApiRequest: (id: string) => void;
-  duplicateApiRequest: (id: string) => ApiRequest | null;
-
-  // Phase 2: Environments
-  addEnvironment: (env: Omit<Environment, 'id' | 'createdAt' | 'updatedAt'>) => Environment;
-  updateEnvironment: (id: string, updates: Partial<Environment>) => void;
-  deleteEnvironment: (id: string) => void;
-  duplicateEnvironment: (id: string) => Environment | null;
-
-  // Phase 2: API History
-  addApiHistoryItem: (item: ApiHistoryItem) => void;
-  clearApiHistory: () => void;
-  deleteApiHistoryItem: (id: string) => void;
-
-  // Phase 2: Webhooks
-  addWebhookEvent: (sessionId: string, event: Omit<WebhookEvent, 'id' | 'timestamp'>) => void;
-  clearWebhookEvents: (sessionId: string) => void;
-  createWebhookSession: (name: string) => WebhookSession;
-}
-
-const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
+import {
+  createInitialNavigationState,
+  pushNavigation,
+  goBackNavigation,
+  goForwardNavigation,
+  canGoBack,
+  canGoForward,
+  type NavigationState,
+} from '../services/navigation';
+import { WorkspaceContext } from './workspaceContextDef';
 
 function createDefaultTab(request?: ApiRequest): ApiTab {
   const baseReq: ApiRequest = request || {
@@ -198,16 +109,10 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [data.settings.theme]);
 
   // Navigation history stack for Back/Forward navigation
-  const [navState, setNavState] = useState<{
-    history: Array<{ view: ViewType; toolId?: string; projectId?: string }>;
-    currentIndex: number;
-  }>({
-    history: [{ view: 'dashboard' }],
-    currentIndex: 0,
-  });
+  const [navState, setNavState] = useState<NavigationState>(createInitialNavigationState);
 
-  const canGoBack = navState.currentIndex > 0;
-  const canGoForward = navState.currentIndex < navState.history.length - 1;
+  const canGoBackVal = canGoBack(navState);
+  const canGoForwardVal = canGoForward(navState);
 
   const setActiveView = useCallback(
     (view: ViewType, options?: { toolId?: string; projectId?: string }) => {
@@ -215,30 +120,13 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setSelectedToolId(options?.toolId ?? null);
       setSelectedProjectId(options?.projectId ?? null);
 
-      setNavState((prev) => {
-        const current = prev.history[prev.currentIndex];
-        const nextItem = {
+      setNavState((prev) =>
+        pushNavigation(prev, {
           view,
           toolId: options?.toolId,
           projectId: options?.projectId,
-        };
-
-        if (
-          current &&
-          current.view === nextItem.view &&
-          current.toolId === nextItem.toolId &&
-          current.projectId === nextItem.projectId
-        ) {
-          return prev;
-        }
-
-        const sliced = prev.history.slice(0, prev.currentIndex + 1);
-        const newHistory = [...sliced, nextItem].slice(-50);
-        return {
-          history: newHistory,
-          currentIndex: newHistory.length - 1,
-        };
-      });
+        })
+      );
 
       window.scrollTo(0, 0);
     },
@@ -247,39 +135,27 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const goBack = useCallback(() => {
     setNavState((prev) => {
-      if (prev.currentIndex <= 0) return prev;
-      const prevIndex = prev.currentIndex - 1;
-      const target = prev.history[prevIndex];
-      if (target) {
-        setActiveViewState(target.view);
-        setSelectedToolId(target.toolId ?? null);
-        setSelectedProjectId(target.projectId ?? null);
+      const { nextState, targetItem } = goBackNavigation(prev);
+      if (targetItem) {
+        setActiveViewState(targetItem.view);
+        setSelectedToolId(targetItem.toolId ?? null);
+        setSelectedProjectId(targetItem.projectId ?? null);
         window.scrollTo(0, 0);
-        return {
-          ...prev,
-          currentIndex: prevIndex,
-        };
       }
-      return prev;
+      return nextState;
     });
   }, []);
 
   const goForward = useCallback(() => {
     setNavState((prev) => {
-      if (prev.currentIndex >= prev.history.length - 1) return prev;
-      const nextIndex = prev.currentIndex + 1;
-      const target = prev.history[nextIndex];
-      if (target) {
-        setActiveViewState(target.view);
-        setSelectedToolId(target.toolId ?? null);
-        setSelectedProjectId(target.projectId ?? null);
+      const { nextState, targetItem } = goForwardNavigation(prev);
+      if (targetItem) {
+        setActiveViewState(targetItem.view);
+        setSelectedToolId(targetItem.toolId ?? null);
+        setSelectedProjectId(targetItem.projectId ?? null);
         window.scrollTo(0, 0);
-        return {
-          ...prev,
-          currentIndex: nextIndex,
-        };
       }
-      return prev;
+      return nextState;
     });
   }, []);
 
@@ -948,8 +824,8 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         isPrivacyModalOpen,
         scratchpadSaveStatus,
         setActiveView,
-        canGoBack,
-        canGoForward,
+        canGoBack: canGoBackVal,
+        canGoForward: canGoForwardVal,
         goBack,
         goForward,
         setIsSidebarCollapsed,
@@ -1021,10 +897,3 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   );
 };
 
-export function useWorkspace(): WorkspaceContextType {
-  const ctx = useContext(WorkspaceContext);
-  if (!ctx) {
-    throw new Error('useWorkspace must be used within a WorkspaceProvider');
-  }
-  return ctx;
-}

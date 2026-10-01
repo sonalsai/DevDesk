@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ToolLayout } from '../common/ToolLayout';
 import { KeyRound, ShieldAlert, CheckCircle2, AlertTriangle, Copy, Check } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 
 // Sample valid JWT for easy developer testing
 const SAMPLE_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZXZlbG9wZXItMTI0NSIsIm5hbWUiOiJBbGV4IFJpdmVyYSIsImFkbWluIjp0cnVlLCJpc3MiOiJodHRwczovL2F1dGguZGV2ZGVzay5pbyIsImF1ZCI6ImRldmRlc2stYXBpIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE5MTYyMzkwMjJ9.4z7k_q7N8c8X-n8B7n4_5e9T-3x8w8r1Y7z8x9C0v1U';
@@ -32,59 +32,61 @@ function base64UrlDecode(str: string): string {
   }
 }
 
+function decodeJwt(token: string) {
+  if (!token.trim()) {
+    return null;
+  }
+  const parts = token.trim().split('.');
+  if (parts.length !== 3) {
+    return {
+      error: 'Invalid JWT structure: Token must contain exactly 3 dot-separated parts (Header.Payload.Signature)',
+    };
+  }
+
+  try {
+    const headerStr = base64UrlDecode(parts[0]);
+    const payloadStr = base64UrlDecode(parts[1]);
+    const signature = parts[2];
+
+    const header = JSON.parse(headerStr);
+    const payload = JSON.parse(payloadStr);
+
+    // Check expiration
+    let isExpired: boolean | null = null;
+    let expDate: Date | null = null;
+    let iatDate: Date | null = null;
+
+    if (payload.exp) {
+      expDate = new Date(payload.exp * 1000);
+      isExpired = expDate.getTime() < Date.now();
+    }
+
+    if (payload.iat) {
+      iatDate = new Date(payload.iat * 1000);
+    }
+
+    return {
+      header,
+      payload,
+      signature,
+      isExpired,
+      expDate,
+      iatDate,
+      error: null,
+    };
+  } catch (err: any) {
+    return {
+      error: `Failed to decode JWT: ${err.message}`,
+    };
+  }
+}
+
 export const JwtDecoder: React.FC = () => {
   const { showToast } = useToast();
   const [token, setToken] = useState<string>(SAMPLE_JWT);
   const [copiedPart, setCopiedPart] = useState<string | null>(null);
 
-  const decoded = useMemo(() => {
-    if (!token.trim()) {
-      return null;
-    }
-    const parts = token.trim().split('.');
-    if (parts.length !== 3) {
-      return {
-        error: 'Invalid JWT structure: Token must contain exactly 3 dot-separated parts (Header.Payload.Signature)',
-      };
-    }
-
-    try {
-      const headerStr = base64UrlDecode(parts[0]);
-      const payloadStr = base64UrlDecode(parts[1]);
-      const signature = parts[2];
-
-      const header = JSON.parse(headerStr);
-      const payload = JSON.parse(payloadStr);
-
-      // Check expiration
-      let isExpired: boolean | null = null;
-      let expDate: Date | null = null;
-      let iatDate: Date | null = null;
-
-      if (payload.exp) {
-        expDate = new Date(payload.exp * 1000);
-        isExpired = expDate.getTime() < Date.now();
-      }
-
-      if (payload.iat) {
-        iatDate = new Date(payload.iat * 1000);
-      }
-
-      return {
-        header,
-        payload,
-        signature,
-        isExpired,
-        expDate,
-        iatDate,
-        error: null,
-      };
-    } catch (err: any) {
-      return {
-        error: `Failed to decode JWT: ${err.message}`,
-      };
-    }
-  }, [token]);
+  const decoded = useMemo(() => decodeJwt(token), [token]);
 
   const copyToClipboard = (text: string, part: string) => {
     navigator.clipboard.writeText(text);

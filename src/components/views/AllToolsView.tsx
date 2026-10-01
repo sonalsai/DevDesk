@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { useWorkspace } from '../../context/WorkspaceContext';
+import { useWorkspace } from '@/hooks';
 import { TOOLS_REGISTRY } from '../../registry/toolsRegistry';
 import type { ToolCategory } from '../../types/tools';
 import { Wrench, Search, Star, ArrowRight } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 
 const CATEGORIES: Array<'All' | ToolCategory> = [
   'All',

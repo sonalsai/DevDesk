@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ToolLayout } from '../common/ToolLayout';
 import { FileText, Copy, Check, Maximize2, Minimize2, Trash2 } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 
 // Clean, secure markdown parser
 function parseMarkdownToHtml(md: string): string {

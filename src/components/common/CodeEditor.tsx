@@ -1,6 +1,6 @@
 import React, { useRef, useState, useCallback } from 'react';
 import { Copy, Check, Trash2, Download } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 
 interface CodeEditorProps {
   label: string;

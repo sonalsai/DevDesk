@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ToolLayout } from '../common/ToolLayout';
 import { Palette, Copy, Check } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 
 // Color conversions
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {

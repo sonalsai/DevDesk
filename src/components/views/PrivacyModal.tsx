@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal } from '../common/Modal';
-import { useWorkspace } from '../../context/WorkspaceContext';
+import { useWorkspace } from '@/hooks';
 import { ShieldCheck, Lock, Database, EyeOff, ServerOff, CheckCircle } from 'lucide-react';
 
 export const PrivacyModal: React.FC = () => {

@@ -12,8 +12,8 @@ import {
   Layers,
   Search,
 } from 'lucide-react';
-import { useWorkspace } from '../../../context/WorkspaceContext';
-import { useToast } from '../../../context/ToastContext';
+import { useWorkspace } from '@/hooks';
+import { useToast } from '@/hooks';
 import type { Environment, EnvironmentVariable } from '../../../types/api';
 import { compareEnvironments, exportDotEnvExample } from '../../../services/environmentService';
 

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ToolLayout } from '../common/ToolLayout';
 import { Calendar, Clock, Copy, Check, Info } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 
 interface CronPreset {
   name: string;

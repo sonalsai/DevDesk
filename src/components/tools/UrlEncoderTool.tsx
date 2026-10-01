@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { ToolLayout } from '../common/ToolLayout';
 import { CodeEditor } from '../common/CodeEditor';
 import { Link2, ArrowRightLeft, AlertTriangle } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 
 export const UrlEncoderTool: React.FC = () => {
   const { showToast } = useToast();

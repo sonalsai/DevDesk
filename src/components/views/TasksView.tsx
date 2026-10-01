@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useWorkspace } from '../../context/WorkspaceContext';
+import { useWorkspace } from '@/hooks';
 import type { Task, TaskPriority, TaskStatus } from '../../types';
 import {
   CheckSquare,
@@ -10,7 +10,7 @@ import {
   FolderKanban,
   Edit2,
 } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 import { Modal } from '../common/Modal';
 
 type FilterTab = 'today' | 'upcoming' | 'completed' | 'all';
@@ -29,7 +29,7 @@ export const TasksView: React.FC = () => {
   // Edit Task modal
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const [todayStr] = useState(() => new Date().toISOString().split('T')[0]);
 
   const filteredTasks = useMemo(() => {
     return data.tasks.filter((task) => {

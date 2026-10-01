@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { ToolLayout } from '../common/ToolLayout';
 import { ShieldCheck, RefreshCw, Copy, Check, Lock } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
 
 function createSecurePassword(
   len: number,

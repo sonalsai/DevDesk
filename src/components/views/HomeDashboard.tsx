@@ -1,5 +1,5 @@
-import React from 'react';
-import { useWorkspace } from '../../context/WorkspaceContext';
+import React, { useState } from 'react';
+import { useWorkspace } from '@/hooks';
 import { TOOLS_REGISTRY } from '../../registry/toolsRegistry';
 import {
   Sparkles,
@@ -17,7 +17,27 @@ import {
   Terminal,
   GitBranch,
 } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '@/hooks';
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return 'Good morning';
+  if (hour >= 12 && hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function formatRelativeTime(timestamp: string): string {
+  const diff = Date.now() - new Date(timestamp).getTime();
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (minutes < 2) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days === 1) return 'Yesterday';
+  return `${days}d ago`;
+}
 
 export const HomeDashboard: React.FC = () => {
   const {
@@ -30,19 +50,13 @@ export const HomeDashboard: React.FC = () => {
   } = useWorkspace();
   const { showToast } = useToast();
 
-  // Time-aware greeting
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) return 'Good morning';
-    if (hour >= 12 && hour < 18) return 'Good afternoon';
-    return 'Good evening';
-  };
-
-  const today = new Date().toLocaleDateString(undefined, {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
+  const [today] = useState(() =>
+    new Date().toLocaleDateString(undefined, {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    })
+  );
 
   const incompleteTasks = data.tasks.filter((t) => t.status !== 'done');
   const doneCount = data.tasks.length - incompleteTasks.length;
@@ -76,19 +90,6 @@ export const HomeDashboard: React.FC = () => {
     }, 80);
   };
 
-  // Relative time helper
-  const formatRelativeTime = (timestamp: string) => {
-    const diff = Date.now() - new Date(timestamp).getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    if (minutes < 2) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    if (days === 1) return 'Yesterday';
-    return `${days}d ago`;
-  };
 
   const historyIcon = { tool: Sparkles, snippet: Code2, project: FolderKanban } as const;
 

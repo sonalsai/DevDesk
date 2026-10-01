@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal } from '../../common/Modal';
 import type { ApiRequest, Environment } from '../../../types/api';
 import { parseCurlToRequest, generateCurlCommand } from '../../../services/curlParser';
-import { useToast } from '../../../context/ToastContext';
+import { useToast } from '@/hooks';
 import { Copy, Check, AlertTriangle, ArrowRight } from 'lucide-react';
 
 interface CurlToolkitModalProps {
