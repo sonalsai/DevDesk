@@ -19,6 +19,10 @@ import {
   Globe,
   Layers,
   Webhook,
+  Radio,
+  Activity,
+  Server,
+  BookOpen,
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
@@ -115,18 +119,51 @@ export const Sidebar: React.FC = () => {
           </button>
         </div>
 
-        {/* DEVELOPMENT SECTION */}
+        {/* API DEVELOPMENT SECTION */}
         <div className="sidebar-section">
-          <div className="sidebar-section-title">Development</div>
+          <div className="sidebar-section-title">API Development</div>
 
           <button
             className={`sidebar-nav-item ${activeView === 'api-client' ? 'active' : ''}`}
             onClick={() => setActiveView('api-client')}
-            title="API Client"
+            title="REST API Client"
           >
             <div className="nav-item-left">
               <Send size={15} />
               <span className="nav-item-label">API Client</span>
+            </div>
+          </button>
+
+          <button
+            className={`sidebar-nav-item ${activeView === 'graphql' ? 'active' : ''}`}
+            onClick={() => setActiveView('graphql')}
+            title="GraphQL Explorer & Schema Introspection"
+          >
+            <div className="nav-item-left">
+              <Layers size={15} style={{ color: '#e6009e' }} />
+              <span className="nav-item-label">GraphQL</span>
+            </div>
+          </button>
+
+          <button
+            className={`sidebar-nav-item ${activeView === 'websocket' ? 'active' : ''}`}
+            onClick={() => setActiveView('websocket')}
+            title="WebSocket Client"
+          >
+            <div className="nav-item-left">
+              <Radio size={15} style={{ color: '#9b59b6' }} />
+              <span className="nav-item-label">WebSocket</span>
+            </div>
+          </button>
+
+          <button
+            className={`sidebar-nav-item ${activeView === 'sse' ? 'active' : ''}`}
+            onClick={() => setActiveView('sse')}
+            title="Server-Sent Events (SSE) Client"
+          >
+            <div className="nav-item-left">
+              <Activity size={15} style={{ color: 'var(--success)' }} />
+              <span className="nav-item-label">SSE</span>
             </div>
           </button>
 
@@ -156,6 +193,28 @@ export const Sidebar: React.FC = () => {
             {data.environments?.length > 0 && (
               <span className="nav-item-badge">{data.environments.length}</span>
             )}
+          </button>
+
+          <button
+            className={`sidebar-nav-item ${activeView === 'mock-server' ? 'active' : ''}`}
+            onClick={() => setActiveView('mock-server')}
+            title="Local Mock Server"
+          >
+            <div className="nav-item-left">
+              <Server size={15} style={{ color: 'var(--accent)' }} />
+              <span className="nav-item-label">Mock Server</span>
+            </div>
+          </button>
+
+          <button
+            className={`sidebar-nav-item ${activeView === 'openapi-explorer' ? 'active' : ''}`}
+            onClick={() => setActiveView('openapi-explorer')}
+            title="OpenAPI & Swagger Explorer"
+          >
+            <div className="nav-item-left">
+              <BookOpen size={15} style={{ color: 'var(--accent)' }} />
+              <span className="nav-item-label">OpenAPI</span>
+            </div>
           </button>
 
           <button

@@ -21,6 +21,10 @@ import {
   Layers,
   Webhook,
   Globe,
+  Radio,
+  Activity,
+  Server,
+  BookOpen,
 } from 'lucide-react';
 import { useToast } from '@/hooks';
 
@@ -226,6 +230,68 @@ export const CommandPalette: React.FC = () => {
       },
     });
 
+    // Phase 3 Actions
+    items.push({
+      id: 'action-graphql',
+      title: 'Open GraphQL Explorer',
+      subtitle: 'Interactive query editor & schema introspection',
+      category: 'Actions',
+      icon: Layers,
+      onSelect: () => {
+        setActiveView('graphql');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-websocket',
+      title: 'Open WebSocket Client',
+      subtitle: 'Real-time bidirectional message inspector',
+      category: 'Actions',
+      icon: Radio,
+      onSelect: () => {
+        setActiveView('websocket');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-sse',
+      title: 'Open SSE Client',
+      subtitle: 'Server-Sent Events streaming consumer',
+      category: 'Actions',
+      icon: Activity,
+      onSelect: () => {
+        setActiveView('sse');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-mock-server',
+      title: 'Open Local Mock Server',
+      subtitle: 'Simulate API responses and latency without a backend',
+      category: 'Actions',
+      icon: Server,
+      onSelect: () => {
+        setActiveView('mock-server');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-openapi',
+      title: 'Import OpenAPI / Swagger',
+      subtitle: 'Import JSON or YAML API specification',
+      category: 'Actions',
+      icon: BookOpen,
+      shortcut: '⌘⇧I',
+      onSelect: () => {
+        setActiveView('openapi-explorer');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
     // Searchable API Requests
     data.apiRequests?.forEach((req) => {
       const coll = data.apiCollections.find((c) => c.id === req.collectionId);
@@ -238,6 +304,81 @@ export const CommandPalette: React.FC = () => {
         onSelect: () => {
           openRequestInTab(req);
           setActiveView('api-client');
+          setIsCommandPaletteOpen(false);
+        },
+      });
+    });
+
+    // Searchable GraphQL queries
+    data.graphqlQueries?.forEach((gql) => {
+      items.push({
+        id: `gql-item-${gql.id}`,
+        title: `GraphQL: ${gql.name}`,
+        subtitle: gql.endpoint,
+        category: 'Tools',
+        icon: Layers,
+        onSelect: () => {
+          setActiveView('graphql');
+          setIsCommandPaletteOpen(false);
+        },
+      });
+    });
+
+    // Searchable Mock Endpoints
+    data.mockEndpoints?.forEach((mock) => {
+      items.push({
+        id: `mock-item-${mock.id}`,
+        title: `Mock: ${mock.method} ${mock.path}`,
+        subtitle: mock.name,
+        category: 'Tools',
+        icon: Server,
+        onSelect: () => {
+          setActiveView('mock-server');
+          setIsCommandPaletteOpen(false);
+        },
+      });
+    });
+
+    // Searchable WebSocket Connections
+    data.webSocketConnections?.forEach((ws) => {
+      items.push({
+        id: `ws-item-${ws.id}`,
+        title: `WebSocket: ${ws.name}`,
+        subtitle: ws.url,
+        category: 'Tools',
+        icon: Radio,
+        onSelect: () => {
+          setActiveView('websocket');
+          setIsCommandPaletteOpen(false);
+        },
+      });
+    });
+
+    // Searchable SSE Connections
+    data.sseConnections?.forEach((sse) => {
+      items.push({
+        id: `sse-item-${sse.id}`,
+        title: `SSE: ${sse.name}`,
+        subtitle: sse.url,
+        category: 'Tools',
+        icon: Activity,
+        onSelect: () => {
+          setActiveView('sse');
+          setIsCommandPaletteOpen(false);
+        },
+      });
+    });
+
+    // Searchable OpenAPI Documents
+    data.openApiDocuments?.forEach((doc) => {
+      items.push({
+        id: `openapi-item-${doc.id}`,
+        title: `OpenAPI: ${doc.name}`,
+        subtitle: `${doc.spec.operations.length} operations`,
+        category: 'Tools',
+        icon: BookOpen,
+        onSelect: () => {
+          setActiveView('openapi-explorer');
           setIsCommandPaletteOpen(false);
         },
       });
@@ -349,6 +490,11 @@ export const CommandPalette: React.FC = () => {
     data.settings.theme,
     data.apiRequests,
     data.apiCollections,
+    data.graphqlQueries,
+    data.mockEndpoints,
+    data.webSocketConnections,
+    data.sseConnections,
+    data.openApiDocuments,
     createNewTab,
     openRequestInTab,
     setActiveView,

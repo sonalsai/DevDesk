@@ -16,6 +16,12 @@ import type {
   Environment,
   WebhookSession,
   WebhookEvent,
+  MockEndpoint,
+  MockRequestLog,
+  GraphQLRequest,
+  WebSocketConnection,
+  SseConnection,
+  OpenApiDocumentRecord,
 } from '../types';
 import {
   loadWorkspaceData,
@@ -811,6 +817,196 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return session;
   }, []);
 
+  // Phase 3: Mock Endpoints & Logs
+  const mockEndpoints = useMemo(() => data.mockEndpoints || [], [data.mockEndpoints]);
+  const mockLogs = useMemo(() => data.mockLogs || [], [data.mockLogs]);
+
+  const addMockEndpoint = useCallback((endpoint: Omit<MockEndpoint, 'id' | 'createdAt' | 'updatedAt'>): MockEndpoint => {
+    const newEp: MockEndpoint = {
+      ...endpoint,
+      id: `mock-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setData((prev) => ({
+      ...prev,
+      mockEndpoints: [newEp, ...(prev.mockEndpoints || [])],
+    }));
+    return newEp;
+  }, []);
+
+  const updateMockEndpoint = useCallback((id: string, updates: Partial<MockEndpoint>) => {
+    setData((prev) => ({
+      ...prev,
+      mockEndpoints: (prev.mockEndpoints || []).map((ep) =>
+        ep.id === id ? { ...ep, ...updates, updatedAt: new Date().toISOString() } : ep
+      ),
+    }));
+  }, []);
+
+  const deleteMockEndpoint = useCallback((id: string) => {
+    setData((prev) => ({
+      ...prev,
+      mockEndpoints: (prev.mockEndpoints || []).filter((ep) => ep.id !== id),
+    }));
+  }, []);
+
+  const duplicateMockEndpoint = useCallback((id: string): MockEndpoint | null => {
+    let duplicated: MockEndpoint | null = null;
+    setData((prev) => {
+      const ep = (prev.mockEndpoints || []).find((e) => e.id === id);
+      if (!ep) return prev;
+      duplicated = {
+        ...ep,
+        id: `mock-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        name: `${ep.name} (Copy)`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      return {
+        ...prev,
+        mockEndpoints: [duplicated, ...(prev.mockEndpoints || [])],
+      };
+    });
+    return duplicated;
+  }, []);
+
+  const addMockLog = useCallback((log: MockRequestLog) => {
+    setData((prev) => ({
+      ...prev,
+      mockLogs: [log, ...(prev.mockLogs || [])].slice(0, 100),
+    }));
+  }, []);
+
+  const clearMockLogs = useCallback(() => {
+    setData((prev) => ({
+      ...prev,
+      mockLogs: [],
+    }));
+  }, []);
+
+  // Phase 3: GraphQL Explorer
+  const graphqlQueries = useMemo(() => data.graphqlQueries || [], [data.graphqlQueries]);
+
+  const addGraphQLRequest = useCallback((req: Omit<GraphQLRequest, 'id' | 'createdAt' | 'updatedAt'>): GraphQLRequest => {
+    const newGql: GraphQLRequest = {
+      ...req,
+      id: `gql-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setData((prev) => ({
+      ...prev,
+      graphqlQueries: [newGql, ...(prev.graphqlQueries || [])],
+    }));
+    return newGql;
+  }, []);
+
+  const updateGraphQLRequest = useCallback((id: string, updates: Partial<GraphQLRequest>) => {
+    setData((prev) => ({
+      ...prev,
+      graphqlQueries: (prev.graphqlQueries || []).map((g) =>
+        g.id === id ? { ...g, ...updates, updatedAt: new Date().toISOString() } : g
+      ),
+    }));
+  }, []);
+
+  const deleteGraphQLRequest = useCallback((id: string) => {
+    setData((prev) => ({
+      ...prev,
+      graphqlQueries: (prev.graphqlQueries || []).filter((g) => g.id !== id),
+    }));
+  }, []);
+
+  // Phase 3: WebSocket Client
+  const webSocketConnections = useMemo(() => data.webSocketConnections || [], [data.webSocketConnections]);
+
+  const addWebSocketConnection = useCallback((conn: Omit<WebSocketConnection, 'id' | 'createdAt' | 'updatedAt'>): WebSocketConnection => {
+    const newWs: WebSocketConnection = {
+      ...conn,
+      id: `ws-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setData((prev) => ({
+      ...prev,
+      webSocketConnections: [newWs, ...(prev.webSocketConnections || [])],
+    }));
+    return newWs;
+  }, []);
+
+  const updateWebSocketConnection = useCallback((id: string, updates: Partial<WebSocketConnection>) => {
+    setData((prev) => ({
+      ...prev,
+      webSocketConnections: (prev.webSocketConnections || []).map((w) =>
+        w.id === id ? { ...w, ...updates, updatedAt: new Date().toISOString() } : w
+      ),
+    }));
+  }, []);
+
+  const deleteWebSocketConnection = useCallback((id: string) => {
+    setData((prev) => ({
+      ...prev,
+      webSocketConnections: (prev.webSocketConnections || []).filter((w) => w.id !== id),
+    }));
+  }, []);
+
+  // Phase 3: Server-Sent Events (SSE) Client
+  const sseConnections = useMemo(() => data.sseConnections || [], [data.sseConnections]);
+
+  const addSseConnection = useCallback((conn: Omit<SseConnection, 'id' | 'createdAt' | 'updatedAt'>): SseConnection => {
+    const newSse: SseConnection = {
+      ...conn,
+      id: `sse-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setData((prev) => ({
+      ...prev,
+      sseConnections: [newSse, ...(prev.sseConnections || [])],
+    }));
+    return newSse;
+  }, []);
+
+  const updateSseConnection = useCallback((id: string, updates: Partial<SseConnection>) => {
+    setData((prev) => ({
+      ...prev,
+      sseConnections: (prev.sseConnections || []).map((s) =>
+        s.id === id ? { ...s, ...updates, updatedAt: new Date().toISOString() } : s
+      ),
+    }));
+  }, []);
+
+  const deleteSseConnection = useCallback((id: string) => {
+    setData((prev) => ({
+      ...prev,
+      sseConnections: (prev.sseConnections || []).filter((s) => s.id !== id),
+    }));
+  }, []);
+
+  // Phase 3: OpenAPI / Swagger Explorer
+  const openApiDocuments = useMemo(() => data.openApiDocuments || [], [data.openApiDocuments]);
+
+  const addOpenApiDocument = useCallback((doc: Omit<OpenApiDocumentRecord, 'id' | 'importedAt'>): OpenApiDocumentRecord => {
+    const newDoc: OpenApiDocumentRecord = {
+      ...doc,
+      id: `openapi-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      importedAt: new Date().toISOString(),
+    };
+    setData((prev) => ({
+      ...prev,
+      openApiDocuments: [newDoc, ...(prev.openApiDocuments || [])],
+    }));
+    return newDoc;
+  }, []);
+
+  const deleteOpenApiDocument = useCallback((id: string) => {
+    setData((prev) => ({
+      ...prev,
+      openApiDocuments: (prev.openApiDocuments || []).filter((d) => d.id !== id),
+    }));
+  }, []);
+
   return (
     <WorkspaceContext.Provider
       value={{
@@ -890,6 +1086,35 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         addWebhookEvent,
         clearWebhookEvents,
         createWebhookSession,
+
+        // Phase 3
+        mockEndpoints,
+        mockLogs,
+        addMockEndpoint,
+        updateMockEndpoint,
+        deleteMockEndpoint,
+        duplicateMockEndpoint,
+        addMockLog,
+        clearMockLogs,
+
+        graphqlQueries,
+        addGraphQLRequest,
+        updateGraphQLRequest,
+        deleteGraphQLRequest,
+
+        webSocketConnections,
+        addWebSocketConnection,
+        updateWebSocketConnection,
+        deleteWebSocketConnection,
+
+        sseConnections,
+        addSseConnection,
+        updateSseConnection,
+        deleteSseConnection,
+
+        openApiDocuments,
+        addOpenApiDocument,
+        deleteOpenApiDocument,
       }}
     >
       {children}

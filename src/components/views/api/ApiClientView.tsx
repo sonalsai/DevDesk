@@ -14,6 +14,9 @@ import {
   StopCircle,
   ListTree,
   Layers,
+  ShieldCheck,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react';
 import { useWorkspace } from '@/hooks';
 import { useToast } from '@/hooks';
@@ -23,8 +26,12 @@ import type {
   BodyType,
   AuthType,
   ApiRequest,
+  ApiAssertion,
+  AssertionType,
+  RequestExtractionRule,
 } from '../../../types/api';
 import { executeApiRequest, createSanitizedHistoryItem } from '../../../services/apiExecutor';
+import { evaluateAssertions, executeRequestExtractions } from '../../../services/assertionRunner';
 import { CurlToolkitModal } from './CurlToolkitModal';
 import { CodeGenerationModal } from './CodeGenerationModal';
 import { JsonPathExplorer } from './JsonPathExplorer';
@@ -62,6 +69,7 @@ export const ApiClientView: React.FC = () => {
     addApiRequest,
     updateApiRequest,
     addApiHistoryItem,
+    updateEnvironment,
   } = useWorkspace();
 
   const { showToast } = useToast();
@@ -71,8 +79,8 @@ export const ApiClientView: React.FC = () => {
   const isLoading = activeTab?.isLoading || false;
 
   // Active sub-tabs
-  const [requestTab, setRequestTab] = useState<'params' | 'headers' | 'auth' | 'body'>('params');
-  const [responseTab, setResponseTab] = useState<'body' | 'headers' | 'raw' | 'path'>('body');
+  const [requestTab, setRequestTab] = useState<'params' | 'headers' | 'auth' | 'body' | 'tests' | 'extract'>('params');
+  const [responseTab, setResponseTab] = useState<'body' | 'headers' | 'raw' | 'path' | 'testResults'>('body');
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -198,13 +206,50 @@ export const ApiClientView: React.FC = () => {
         signal: controller.signal,
       });
 
+      // Phase 3: Evaluate Assertions
+      if (activeRequest.assertions && activeRequest.assertions.length > 0) {
+        res.assertionResults = evaluateAssertions(activeRequest.assertions, res);
+      }
+
+      // Phase 3: Execute Request Extractions for chaining
+      if (activeRequest.extractions && activeRequest.extractions.length > 0 && activeEnvironment) {
+        const extracted = executeRequestExtractions(activeRequest.extractions, res);
+        const extractedKeys = Object.keys(extracted);
+        if (extractedKeys.length > 0) {
+          const updatedVars = [...activeEnvironment.variables];
+          for (const [k, v] of Object.entries(extracted)) {
+            const idx = updatedVars.findIndex((item) => item.key === k);
+            if (idx >= 0) {
+              updatedVars[idx] = { ...updatedVars[idx], value: String(v) };
+            } else {
+              updatedVars.push({
+                id: `var-ext-${Date.now()}-${k}`,
+                key: k,
+                value: String(v),
+                isSecret: false,
+                enabled: true,
+              });
+            }
+          }
+          updateEnvironment(activeEnvironment.id, { variables: updatedVars });
+        }
+      }
+
       updateTabResponse(activeTabId, res);
 
       // Add to sanitized history
       const historyItem = createSanitizedHistoryItem(activeRequest, res);
       addApiHistoryItem(historyItem);
 
-      if (res.status >= 200 && res.status < 400) {
+      if (res.assertionResults && res.assertionResults.length > 0) {
+        const passedCount = res.assertionResults.filter((r) => r.passed).length;
+        const total = res.assertionResults.length;
+        if (passedCount === total) {
+          showToast(`All ${total} assertions passed! (${res.timeMs}ms)`, 'success', 2500);
+        } else {
+          showToast(`Assertions: ${passedCount}/${total} passed`, 'warning', 3000);
+        }
+      } else if (res.status >= 200 && res.status < 400) {
         showToast(`${res.status} ${res.statusText} (${res.timeMs}ms)`, 'success', 2000);
       } else if (res.status === 0) {
         showToast('Request failed or was blocked (see details)', 'error', 3000);
@@ -618,12 +663,16 @@ export const ApiClientView: React.FC = () => {
               background: 'var(--bg-elevated)',
             }}
           >
-            {(['params', 'headers', 'auth', 'body'] as const).map((tab) => {
+            {(['params', 'headers', 'auth', 'body', 'tests', 'extract'] as const).map((tab) => {
               const count =
                 tab === 'params'
                   ? activeRequest.params.filter((p) => p.enabled && p.key).length
                   : tab === 'headers'
                   ? activeRequest.headers.filter((h) => h.enabled && h.key).length
+                  : tab === 'tests'
+                  ? (activeRequest.assertions || []).filter((a) => a.enabled).length
+                  : tab === 'extract'
+                  ? (activeRequest.extractions || []).filter((e) => e.enabled).length
                   : 0;
 
               return (
@@ -645,7 +694,9 @@ export const ApiClientView: React.FC = () => {
                     gap: 4,
                   }}
                 >
-                  <span style={{ textTransform: 'capitalize' }}>{tab}</span>
+                  <span style={{ textTransform: 'capitalize' }}>
+                    {tab === 'tests' ? 'Tests' : tab === 'extract' ? 'Chaining' : tab}
+                  </span>
                   {count > 0 && (
                     <span
                       style={{
@@ -1194,6 +1245,290 @@ export const ApiClientView: React.FC = () => {
                 )}
               </div>
             )}
+
+            {/* Phase 3: Tests / Assertions Tab */}
+            {requestTab === 'tests' && (
+              <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <strong style={{ fontSize: 13, color: 'var(--text-primary)' }}>Response Assertions</strong>
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
+                      Declarative test assertions executed safely in-browser without eval().
+                    </div>
+                  </div>
+                  <button
+                    className="btn btn-sm btn-secondary"
+                    onClick={() => {
+                      const newAssertion: ApiAssertion = {
+                        id: `ast-${Date.now()}`,
+                        type: 'status_code',
+                        expected: '200',
+                        enabled: true,
+                      };
+                      updateCurrentRequest({
+                        assertions: [...(activeRequest.assertions || []), newAssertion],
+                      });
+                    }}
+                  >
+                    <Plus size={12} /> Add Assertion
+                  </button>
+                </div>
+
+                {/* Preset quick buttons */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)', alignSelf: 'center' }}>Presets:</span>
+                  <button
+                    className="btn btn-sm btn-ghost"
+                    style={{ fontSize: 11, padding: '2px 8px' }}
+                    onClick={() => {
+                      const ast: ApiAssertion = { id: `ast-${Date.now()}`, type: 'status_code', expected: '200', enabled: true };
+                      updateCurrentRequest({ assertions: [...(activeRequest.assertions || []), ast] });
+                    }}
+                  >
+                    Status is 200
+                  </button>
+                  <button
+                    className="btn btn-sm btn-ghost"
+                    style={{ fontSize: 11, padding: '2px 8px' }}
+                    onClick={() => {
+                      const ast: ApiAssertion = { id: `ast-${Date.now()}`, type: 'status_2xx', enabled: true };
+                      updateCurrentRequest({ assertions: [...(activeRequest.assertions || []), ast] });
+                    }}
+                  >
+                    Status is 2xx
+                  </button>
+                  <button
+                    className="btn btn-sm btn-ghost"
+                    style={{ fontSize: 11, padding: '2px 8px' }}
+                    onClick={() => {
+                      const ast: ApiAssertion = { id: `ast-${Date.now()}`, type: 'response_time', expected: '1000', enabled: true };
+                      updateCurrentRequest({ assertions: [...(activeRequest.assertions || []), ast] });
+                    }}
+                  >
+                    Time &lt; 1000ms
+                  </button>
+                  <button
+                    className="btn btn-sm btn-ghost"
+                    style={{ fontSize: 11, padding: '2px 8px' }}
+                    onClick={() => {
+                      const ast: ApiAssertion = { id: `ast-${Date.now()}`, type: 'json_path_exists', target: '$.id', enabled: true };
+                      updateCurrentRequest({ assertions: [...(activeRequest.assertions || []), ast] });
+                    }}
+                  >
+                    JSON $.id exists
+                  </button>
+                </div>
+
+                {/* Assertions Table */}
+                {(!activeRequest.assertions || activeRequest.assertions.length === 0) ? (
+                  <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--text-muted)', fontSize: 12 }}>
+                    No assertions configured. Add an assertion or click a preset above to test response status, latency, headers, or JSON data.
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {activeRequest.assertions.map((ast, idx) => (
+                      <div
+                        key={ast.id}
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '28px 160px 1fr 1fr 32px',
+                          gap: 8,
+                          alignItems: 'center',
+                          backgroundColor: 'var(--bg-card)',
+                          padding: '6px 8px',
+                          borderRadius: 'var(--radius-sm)',
+                          border: '1px solid var(--border-subtle)',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={ast.enabled}
+                          onChange={(e) => {
+                            const updated = [...(activeRequest.assertions || [])];
+                            updated[idx] = { ...ast, enabled: e.target.checked };
+                            updateCurrentRequest({ assertions: updated });
+                          }}
+                        />
+                        <select
+                          value={ast.type}
+                          onChange={(e) => {
+                            const updated = [...(activeRequest.assertions || [])];
+                            updated[idx] = { ...ast, type: e.target.value as AssertionType };
+                            updateCurrentRequest({ assertions: updated });
+                          }}
+                          className="input-field"
+                          style={{ height: 28, fontSize: 11, padding: '2px 6px' }}
+                        >
+                          <option value="status_code">Status equals</option>
+                          <option value="status_2xx">Status is 2xx</option>
+                          <option value="response_time">Response time &lt;</option>
+                          <option value="header_exists">Header exists</option>
+                          <option value="header_equals">Header equals</option>
+                          <option value="json_path_exists">JSON path exists</option>
+                          <option value="json_path_equals">JSON path equals</option>
+                          <option value="body_contains">Body contains</option>
+                        </select>
+
+                        {/* Target input */}
+                        {['header_exists', 'header_equals', 'json_path_exists', 'json_path_equals'].includes(ast.type) ? (
+                          <input
+                            type="text"
+                            placeholder={ast.type.includes('header') ? 'Header name (e.g. content-type)' : 'JSONPath (e.g. $.user.id)'}
+                            value={ast.target || ''}
+                            onChange={(e) => {
+                              const updated = [...(activeRequest.assertions || [])];
+                              updated[idx] = { ...ast, target: e.target.value };
+                              updateCurrentRequest({ assertions: updated });
+                            }}
+                            className="input-field"
+                            style={{ height: 28, fontSize: 11, fontFamily: 'var(--font-mono)' }}
+                          />
+                        ) : (
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', fontStyle: 'italic', paddingLeft: 6 }}>
+                            {ast.type === 'status_2xx' ? 'No target needed' : ast.type === 'body_contains' ? 'Response body' : 'HTTP status'}
+                          </div>
+                        )}
+
+                        {/* Expected input */}
+                        {ast.type !== 'status_2xx' && ast.type !== 'header_exists' && ast.type !== 'json_path_exists' ? (
+                          <input
+                            type="text"
+                            placeholder={ast.type === 'response_time' ? 'Max ms (e.g. 500)' : 'Expected value'}
+                            value={ast.expected || ''}
+                            onChange={(e) => {
+                              const updated = [...(activeRequest.assertions || [])];
+                              updated[idx] = { ...ast, expected: e.target.value };
+                              updateCurrentRequest({ assertions: updated });
+                            }}
+                            className="input-field"
+                            style={{ height: 28, fontSize: 11, fontFamily: 'var(--font-mono)' }}
+                          />
+                        ) : (
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', fontStyle: 'italic', paddingLeft: 6 }}>
+                            Existence check
+                          </div>
+                        )}
+
+                        <button
+                          className="btn btn-sm btn-ghost"
+                          style={{ padding: 4, color: 'var(--danger)' }}
+                          onClick={() => {
+                            const updated = (activeRequest.assertions || []).filter((_, i) => i !== idx);
+                            updateCurrentRequest({ assertions: updated });
+                          }}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Phase 3: Request Chaining Extractions Tab */}
+            {requestTab === 'extract' && (
+              <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <strong style={{ fontSize: 13, color: 'var(--text-primary)' }}>Variable Extractions (Request Chaining)</strong>
+                    <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
+                      Automatically extract response values via JSONPath and store them into active Environment variables.
+                    </div>
+                  </div>
+                  <button
+                    className="btn btn-sm btn-secondary"
+                    onClick={() => {
+                      const newRule: RequestExtractionRule = {
+                        id: `ext-${Date.now()}`,
+                        jsonPath: '$.token',
+                        variableName: 'auth_token',
+                        enabled: true,
+                      };
+                      updateCurrentRequest({
+                        extractions: [...(activeRequest.extractions || []), newRule],
+                      });
+                    }}
+                  >
+                    <Plus size={12} /> Add Extraction Rule
+                  </button>
+                </div>
+
+                {(!activeRequest.extractions || activeRequest.extractions.length === 0) ? (
+                  <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--text-muted)', fontSize: 12 }}>
+                    No extraction rules defined. Extract fields like <code>$.token</code> or <code>$.user.id</code> into environment variables for subsequent requests.
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {activeRequest.extractions.map((rule, idx) => (
+                      <div
+                        key={rule.id}
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '28px 1fr 1fr 32px',
+                          gap: 8,
+                          alignItems: 'center',
+                          backgroundColor: 'var(--bg-card)',
+                          padding: '6px 8px',
+                          borderRadius: 'var(--radius-sm)',
+                          border: '1px solid var(--border-subtle)',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={rule.enabled}
+                          onChange={(e) => {
+                            const updated = [...(activeRequest.extractions || [])];
+                            updated[idx] = { ...rule, enabled: e.target.checked };
+                            updateCurrentRequest({ extractions: updated });
+                          }}
+                        />
+                        <div>
+                          <label style={{ fontSize: 10, color: 'var(--text-muted)', display: 'block' }}>JSONPath Expression</label>
+                          <input
+                            type="text"
+                            placeholder="$.token or $.data[0].id"
+                            value={rule.jsonPath}
+                            onChange={(e) => {
+                              const updated = [...(activeRequest.extractions || [])];
+                              updated[idx] = { ...rule, jsonPath: e.target.value };
+                              updateCurrentRequest({ extractions: updated });
+                            }}
+                            className="input-field"
+                            style={{ height: 28, fontSize: 11, fontFamily: 'var(--font-mono)', width: '100%' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: 10, color: 'var(--text-muted)', display: 'block' }}>Environment Variable Name</label>
+                          <input
+                            type="text"
+                            placeholder="auth_token"
+                            value={rule.variableName}
+                            onChange={(e) => {
+                              const updated = [...(activeRequest.extractions || [])];
+                              updated[idx] = { ...rule, variableName: e.target.value };
+                              updateCurrentRequest({ extractions: updated });
+                            }}
+                            className="input-field"
+                            style={{ height: 28, fontSize: 11, fontFamily: 'var(--font-mono)', width: '100%' }}
+                          />
+                        </div>
+                        <button
+                          className="btn btn-sm btn-ghost"
+                          style={{ padding: 4, color: 'var(--danger)', marginTop: 12 }}
+                          onClick={() => {
+                            const updated = (activeRequest.extractions || []).filter((_, i) => i !== idx);
+                            updateCurrentRequest({ extractions: updated });
+                          }}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -1251,6 +1586,33 @@ export const ApiClientView: React.FC = () => {
                 <span style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
                   Size: <strong style={{ color: 'var(--text-primary)' }}>{(response.sizeBytes / 1024).toFixed(2)} KB</strong>
                 </span>
+
+                {response.assertionResults && response.assertionResults.length > 0 && (() => {
+                  const passed = response.assertionResults.filter((r) => r.passed).length;
+                  const total = response.assertionResults.length;
+                  const allPass = passed === total;
+                  return (
+                    <span
+                      onClick={() => setResponseTab('testResults')}
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        padding: '2px 8px',
+                        borderRadius: 'var(--radius-sm)',
+                        cursor: 'pointer',
+                        backgroundColor: allPass ? 'rgba(46, 204, 113, 0.15)' : 'rgba(231, 76, 60, 0.15)',
+                        color: allPass ? 'var(--success)' : 'var(--danger)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4,
+                      }}
+                      title="Click to view assertion test details"
+                    >
+                      <ShieldCheck size={12} />
+                      {passed}/{total} Tests Passed
+                    </span>
+                  );
+                })()}
               </div>
             ) : (
               <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
@@ -1291,7 +1653,7 @@ export const ApiClientView: React.FC = () => {
               }}
             >
               <div style={{ display: 'flex', gap: 6 }}>
-                {(['body', 'headers', 'raw', 'path'] as const).map((tab) => (
+                {(['body', 'headers', 'raw', 'path', 'testResults'] as const).map((tab) => (
                   <button
                     key={tab}
                     className={`btn-subtab ${responseTab === tab ? 'active' : ''}`}
@@ -1312,7 +1674,12 @@ export const ApiClientView: React.FC = () => {
                     }}
                   >
                     {tab === 'path' && <ListTree size={12} />}
-                    {tab === 'path' ? 'JSON Path' : tab}
+                    {tab === 'testResults' && <ShieldCheck size={12} />}
+                    {tab === 'path'
+                      ? 'JSON Path'
+                      : tab === 'testResults'
+                      ? `Test Results ${response.assertionResults ? `(${response.assertionResults.filter((r) => r.passed).length}/${response.assertionResults.length})` : ''}`
+                      : tab}
                   </button>
                 ))}
               </div>
@@ -1455,6 +1822,56 @@ export const ApiClientView: React.FC = () => {
 
             {response && responseTab === 'path' && (
               <JsonPathExplorer data={parsedJsonData || response.data} />
+            )}
+
+            {/* Phase 3: Test Results View */}
+            {response && responseTab === 'testResults' && (
+              <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto' }}>
+                {(!response.assertionResults || response.assertionResults.length === 0) ? (
+                  <div style={{ textAlign: 'center', padding: '30px 10px', color: 'var(--text-muted)', fontSize: 12 }}>
+                    No assertions were executed for this request. Configure assertions under the "Tests" tab in the request builder.
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {response.assertionResults.map((result, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 10,
+                          padding: '10px 12px',
+                          borderRadius: 'var(--radius-sm)',
+                          backgroundColor: result.passed ? 'rgba(46, 204, 113, 0.08)' : 'rgba(231, 76, 60, 0.08)',
+                          border: `1px solid ${result.passed ? 'var(--success)' : 'var(--danger)'}`,
+                        }}
+                      >
+                        {result.passed ? (
+                          <CheckCircle2 size={18} color="var(--success)" style={{ flexShrink: 0, marginTop: 1 }} />
+                        ) : (
+                          <XCircle size={18} color="var(--danger)" style={{ flexShrink: 0, marginTop: 1 }} />
+                        )}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <strong style={{ fontSize: 12, color: result.passed ? 'var(--success)' : 'var(--danger)' }}>
+                              {result.passed ? 'PASSED' : 'FAILED'} — {result.type}
+                            </strong>
+                          </div>
+                          <div style={{ fontSize: 12, color: 'var(--text-primary)' }}>
+                            {result.message}
+                          </div>
+                          {(result.expected !== undefined || result.actual !== undefined) && (
+                            <div style={{ display: 'flex', gap: 16, fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)', marginTop: 2 }}>
+                              {result.expected !== undefined && <span>Expected: {result.expected}</span>}
+                              {result.actual !== undefined && <span>Actual: {result.actual}</span>}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>

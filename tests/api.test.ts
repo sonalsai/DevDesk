@@ -267,11 +267,15 @@ describe('Storage Migrations', () => {
     };
 
     const migrated = migrateWorkspaceData(legacyData);
-    expect(migrated.version).toBe(4);
+    expect(migrated.version).toBe(5);
     expect(Array.isArray(migrated.apiCollections)).toBe(true);
     expect(Array.isArray(migrated.apiRequests)).toBe(true);
     expect(Array.isArray(migrated.environments)).toBe(true);
     expect(Array.isArray(migrated.webhookSessions)).toBe(true);
+    expect(Array.isArray(migrated.mockEndpoints)).toBe(true);
+    expect(Array.isArray(migrated.webSocketConnections)).toBe(true);
+    expect(Array.isArray(migrated.sseConnections)).toBe(true);
+    expect(Array.isArray(migrated.graphqlQueries)).toBe(true);
     expect(migrated.environments.length).toBeGreaterThan(0);
   });
 });

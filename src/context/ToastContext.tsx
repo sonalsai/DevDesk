@@ -31,6 +31,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             <span className="toast-icon">
               {toast.type === 'success' && <CheckCircle2 size={15} />}
               {toast.type === 'error' && <AlertCircle size={15} />}
+              {toast.type === 'warning' && <AlertCircle size={15} />}
               {toast.type === 'info' && <Info size={15} />}
             </span>
             <span className="toast-message">{toast.message}</span>

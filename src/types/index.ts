@@ -103,7 +103,12 @@ export type ViewType =
   | 'collections'
   | 'environments'
   | 'webhooks'
-  | 'http-inspector';
+  | 'http-inspector'
+  | 'graphql'
+  | 'websocket'
+  | 'sse'
+  | 'mock-server'
+  | 'openapi-explorer';
 
 import type {
   ApiCollection,
@@ -111,6 +116,12 @@ import type {
   ApiHistoryItem,
   Environment,
   WebhookSession,
+  GraphQLRequest,
+  WebSocketConnection,
+  SseConnection,
+  MockEndpoint,
+  MockRequestLog,
+  OpenApiDocumentRecord,
 } from './api';
 
 export interface WorkspaceData {
@@ -131,4 +142,12 @@ export interface WorkspaceData {
   activeEnvironmentId?: string;
   webhookSessions: WebhookSession[];
   activeWebhookSessionId?: string;
+
+  // Phase 3: Real-Time, GraphQL, Mock Server & OpenAPI
+  graphqlQueries?: GraphQLRequest[];
+  webSocketConnections?: WebSocketConnection[];
+  sseConnections?: SseConnection[];
+  mockEndpoints?: MockEndpoint[];
+  mockLogs?: MockRequestLog[];
+  openApiDocuments?: OpenApiDocumentRecord[];
 }

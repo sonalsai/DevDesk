@@ -6,9 +6,14 @@ import type {
   ApiRequest,
   Environment,
   WebhookSession,
+  MockEndpoint,
+  GraphQLRequest,
+  WebSocketConnection,
+  SseConnection,
+  OpenApiDocumentRecord,
 } from '../types';
 
-const STORAGE_KEY = 'devdesk_workspace_v2';
+const STORAGE_KEY = 'devdesk_workspace_v3';
 
 export const DEFAULT_SETTINGS: UserSettings = {
   theme: 'dark',
@@ -214,6 +219,158 @@ export const DEFAULT_WEBHOOK_SESSIONS: WebhookSession[] = [
   },
 ];
 
+// Phase 3: Default Mock Endpoints
+export const DEFAULT_MOCK_ENDPOINTS: MockEndpoint[] = [
+  {
+    id: 'mock-users',
+    name: 'Get All Users',
+    method: 'GET',
+    path: '/api/v1/users',
+    description: 'Simulates listing active user profiles',
+    enabled: true,
+    scenarios: [
+      {
+        id: 'sc-users-200',
+        name: '200 OK (3 Users)',
+        status: 200,
+        statusText: 'OK',
+        headers: [{ id: 'mh-1', key: 'Content-Type', value: 'application/json', enabled: true }],
+        contentType: 'application/json',
+        body: JSON.stringify(
+          [
+            { id: 'usr_1', name: 'Alex Rivera', role: 'Staff Engineer', status: 'active' },
+            { id: 'usr_2', name: 'Sam Chen', role: 'Product Architect', status: 'active' },
+            { id: 'usr_3', name: 'Jordan Taylor', role: 'DevOps Lead', status: 'away' },
+          ],
+          null,
+          2
+        ),
+        delayMs: 60,
+        isDefault: true,
+      },
+      {
+        id: 'sc-users-500',
+        name: '500 Server Error',
+        status: 500,
+        statusText: 'Internal Server Error',
+        headers: [{ id: 'mh-2', key: 'Content-Type', value: 'application/json', enabled: true }],
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'Database connection pool exhausted', code: 'DB_OVERLOAD' }, null, 2),
+        delayMs: 200,
+        isDefault: false,
+      },
+    ],
+    activeScenarioId: 'sc-users-200',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'mock-user-detail',
+    name: 'Get User By ID',
+    method: 'GET',
+    path: '/api/v1/users/:id',
+    description: 'Dynamic route parameter matching user detail',
+    enabled: true,
+    scenarios: [
+      {
+        id: 'sc-user-detail-200',
+        name: '200 Found User',
+        status: 200,
+        statusText: 'OK',
+        headers: [{ id: 'mh-3', key: 'Content-Type', value: 'application/json', enabled: true }],
+        contentType: 'application/json',
+        body: JSON.stringify(
+          {
+            id: 'usr_1',
+            name: 'Alex Rivera',
+            email: 'alex@devdesk.local',
+            tier: 'enterprise',
+            created_at: '2026-01-15T08:00:00Z',
+          },
+          null,
+          2
+        ),
+        delayMs: 50,
+        isDefault: true,
+      },
+      {
+        id: 'sc-user-detail-404',
+        name: '404 Not Found',
+        status: 404,
+        statusText: 'Not Found',
+        headers: [{ id: 'mh-4', key: 'Content-Type', value: 'application/json', enabled: true }],
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'User does not exist in workspace', code: 'USER_NOT_FOUND' }, null, 2),
+        delayMs: 40,
+        isDefault: false,
+      },
+    ],
+    activeScenarioId: 'sc-user-detail-200',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
+// Phase 3: Default GraphQL Requests
+export const DEFAULT_GRAPHQL_REQUESTS: GraphQLRequest[] = [
+  {
+    id: 'gql-countries-demo',
+    name: 'Countries & Continents',
+    endpoint: 'https://countries.trevorblades.com/graphql',
+    query: `query GetCountries($filter: CountryFilterInput) {
+  countries(filter: $filter) {
+    code
+    name
+    capital
+    currency
+    emoji
+  }
+}`,
+    variables: JSON.stringify(
+      {
+        filter: {
+          code: { in: ['US', 'GB', 'DE', 'JP', 'FR'] },
+        },
+      },
+      null,
+      2
+    ),
+    headers: [{ id: 'gh-1', key: 'Content-Type', value: 'application/json', enabled: true }],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
+// Phase 3: Default WebSocket Connections
+export const DEFAULT_WEBSOCKET_CONNECTIONS: WebSocketConnection[] = [
+  {
+    id: 'ws-echo-demo',
+    name: 'WebSocket Echo Server',
+    url: 'wss://echo.websocket.org',
+    protocols: [],
+    headers: [],
+    messages: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
+// Phase 3: Default SSE Connections
+export const DEFAULT_SSE_CONNECTIONS: SseConnection[] = [
+  {
+    id: 'sse-httpbin-stream',
+    name: 'HTTPBin Stream (5 Events)',
+    url: 'https://httpbin.org/stream/5',
+    headers: [{ id: 'sseh-1', key: 'Accept', value: 'text/event-stream', enabled: true }],
+    events: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
+// Phase 3: Default OpenAPI Documents
+export const DEFAULT_OPENAPI_DOCUMENTS: OpenApiDocumentRecord[] = [];
+
 export const INITIAL_WORKSPACE: WorkspaceData = {
   tasks: [],
   snippets: [],
@@ -222,7 +379,7 @@ export const INITIAL_WORKSPACE: WorkspaceData = {
   favorites: [],
   history: [],
   settings: DEFAULT_SETTINGS,
-  version: 4,
+  version: 5,
 
   // Phase 2
   apiCollections: DEFAULT_COLLECTIONS,
@@ -232,6 +389,14 @@ export const INITIAL_WORKSPACE: WorkspaceData = {
   activeEnvironmentId: 'env-dev',
   webhookSessions: DEFAULT_WEBHOOK_SESSIONS,
   activeWebhookSessionId: 'wh-session-default',
+
+  // Phase 3
+  graphqlQueries: DEFAULT_GRAPHQL_REQUESTS,
+  webSocketConnections: DEFAULT_WEBSOCKET_CONNECTIONS,
+  sseConnections: DEFAULT_SSE_CONNECTIONS,
+  mockEndpoints: DEFAULT_MOCK_ENDPOINTS,
+  mockLogs: [],
+  openApiDocuments: DEFAULT_OPENAPI_DOCUMENTS,
 };
 
 export function migrateWorkspaceData(parsed: any): WorkspaceData {
@@ -252,7 +417,7 @@ export function migrateWorkspaceData(parsed: any): WorkspaceData {
     favorites: Array.isArray(parsed.favorites) ? parsed.favorites : [],
     history: Array.isArray(parsed.history) ? parsed.history : [],
     settings,
-    version: 4,
+    version: 5,
 
     // Phase 2 items
     apiCollections: Array.isArray(parsed.apiCollections) && parsed.apiCollections.length > 0
@@ -270,13 +435,32 @@ export function migrateWorkspaceData(parsed: any): WorkspaceData {
       ? parsed.webhookSessions
       : DEFAULT_WEBHOOK_SESSIONS,
     activeWebhookSessionId: parsed.activeWebhookSessionId || 'wh-session-default',
+
+    // Phase 3 items
+    graphqlQueries: Array.isArray(parsed.graphqlQueries) && parsed.graphqlQueries.length > 0
+      ? parsed.graphqlQueries
+      : DEFAULT_GRAPHQL_REQUESTS,
+    webSocketConnections: Array.isArray(parsed.webSocketConnections) && parsed.webSocketConnections.length > 0
+      ? parsed.webSocketConnections
+      : DEFAULT_WEBSOCKET_CONNECTIONS,
+    sseConnections: Array.isArray(parsed.sseConnections) && parsed.sseConnections.length > 0
+      ? parsed.sseConnections
+      : DEFAULT_SSE_CONNECTIONS,
+    mockEndpoints: Array.isArray(parsed.mockEndpoints) && parsed.mockEndpoints.length > 0
+      ? parsed.mockEndpoints
+      : DEFAULT_MOCK_ENDPOINTS,
+    mockLogs: Array.isArray(parsed.mockLogs) ? parsed.mockLogs : [],
+    openApiDocuments: Array.isArray(parsed.openApiDocuments) ? parsed.openApiDocuments : [],
   };
 }
 
 export function loadWorkspaceData(): WorkspaceData {
   try {
-    // Try v2 storage key first, then fallback to v1 for migration
+    // Try v3 storage key first, then fallback to v2 and v1 for migration
     let raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      raw = localStorage.getItem('devdesk_workspace_v2');
+    }
     if (!raw) {
       raw = localStorage.getItem('devdesk_workspace_v1');
     }
@@ -353,7 +537,7 @@ export function parseImportedWorkspace(jsonStr: string): WorkspaceData {
     favorites: Array.isArray(parsed.favorites) ? parsed.favorites : [],
     history: Array.isArray(parsed.history) ? parsed.history : [],
     settings: { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) },
-    version: 4,
+    version: 5,
 
     // Phase 2 items
     apiCollections: Array.isArray(parsed.apiCollections) ? parsed.apiCollections : DEFAULT_COLLECTIONS,
@@ -363,10 +547,19 @@ export function parseImportedWorkspace(jsonStr: string): WorkspaceData {
     activeEnvironmentId: parsed.activeEnvironmentId || 'env-dev',
     webhookSessions: Array.isArray(parsed.webhookSessions) ? parsed.webhookSessions : DEFAULT_WEBHOOK_SESSIONS,
     activeWebhookSessionId: parsed.activeWebhookSessionId || 'wh-session-default',
+
+    // Phase 3 items
+    graphqlQueries: Array.isArray(parsed.graphqlQueries) ? parsed.graphqlQueries : DEFAULT_GRAPHQL_REQUESTS,
+    webSocketConnections: Array.isArray(parsed.webSocketConnections) ? parsed.webSocketConnections : DEFAULT_WEBSOCKET_CONNECTIONS,
+    sseConnections: Array.isArray(parsed.sseConnections) ? parsed.sseConnections : DEFAULT_SSE_CONNECTIONS,
+    mockEndpoints: Array.isArray(parsed.mockEndpoints) ? parsed.mockEndpoints : DEFAULT_MOCK_ENDPOINTS,
+    mockLogs: Array.isArray(parsed.mockLogs) ? parsed.mockLogs : [],
+    openApiDocuments: Array.isArray(parsed.openApiDocuments) ? parsed.openApiDocuments : [],
   };
 }
 
 export function clearWorkspaceStorage(): void {
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem('devdesk_workspace_v2');
   localStorage.removeItem('devdesk_workspace_v1');
 }

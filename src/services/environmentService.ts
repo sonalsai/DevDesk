@@ -3,11 +3,15 @@ import type { Environment, EnvironmentVariable } from '../types/api';
 /**
  * Replaces {{variable_name}} placeholders with active environment values.
  */
-export function interpolateVariables(template: string, environment?: Environment): string {
-  if (!template || !environment) return template || '';
+export function interpolateVariables(
+  template: string,
+  environmentOrVars?: Environment | EnvironmentVariable[]
+): string {
+  if (!template || !environmentOrVars) return template || '';
 
   const varMap = new Map<string, string>();
-  environment.variables.forEach((v) => {
+  const vars = Array.isArray(environmentOrVars) ? environmentOrVars : environmentOrVars.variables;
+  vars?.forEach((v) => {
     if (v.enabled) {
       varMap.set(v.key, v.value);
     }

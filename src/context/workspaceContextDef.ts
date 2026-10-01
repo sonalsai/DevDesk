@@ -14,6 +14,12 @@ import type {
   Environment,
   WebhookSession,
   WebhookEvent,
+  MockEndpoint,
+  MockRequestLog,
+  GraphQLRequest,
+  WebSocketConnection,
+  SseConnection,
+  OpenApiDocumentRecord,
 } from '../types';
 
 export interface WorkspaceContextType {
@@ -111,6 +117,39 @@ export interface WorkspaceContextType {
   addWebhookEvent: (sessionId: string, event: Omit<WebhookEvent, 'id' | 'timestamp'>) => void;
   clearWebhookEvents: (sessionId: string) => void;
   createWebhookSession: (name: string) => WebhookSession;
+
+  // Phase 3: Mock Server
+  mockEndpoints: MockEndpoint[];
+  mockLogs: MockRequestLog[];
+  addMockEndpoint: (endpoint: Omit<MockEndpoint, 'id' | 'createdAt' | 'updatedAt'>) => MockEndpoint;
+  updateMockEndpoint: (id: string, updates: Partial<MockEndpoint>) => void;
+  deleteMockEndpoint: (id: string) => void;
+  duplicateMockEndpoint: (id: string) => MockEndpoint | null;
+  addMockLog: (log: MockRequestLog) => void;
+  clearMockLogs: () => void;
+
+  // Phase 3: GraphQL Explorer
+  graphqlQueries: GraphQLRequest[];
+  addGraphQLRequest: (req: Omit<GraphQLRequest, 'id' | 'createdAt' | 'updatedAt'>) => GraphQLRequest;
+  updateGraphQLRequest: (id: string, updates: Partial<GraphQLRequest>) => void;
+  deleteGraphQLRequest: (id: string) => void;
+
+  // Phase 3: WebSocket Client
+  webSocketConnections: WebSocketConnection[];
+  addWebSocketConnection: (conn: Omit<WebSocketConnection, 'id' | 'createdAt' | 'updatedAt'>) => WebSocketConnection;
+  updateWebSocketConnection: (id: string, updates: Partial<WebSocketConnection>) => void;
+  deleteWebSocketConnection: (id: string) => void;
+
+  // Phase 3: Server-Sent Events (SSE) Client
+  sseConnections: SseConnection[];
+  addSseConnection: (conn: Omit<SseConnection, 'id' | 'createdAt' | 'updatedAt'>) => SseConnection;
+  updateSseConnection: (id: string, updates: Partial<SseConnection>) => void;
+  deleteSseConnection: (id: string) => void;
+
+  // Phase 3: OpenAPI / Swagger Explorer
+  openApiDocuments: OpenApiDocumentRecord[];
+  addOpenApiDocument: (doc: Omit<OpenApiDocumentRecord, 'id' | 'importedAt'>) => OpenApiDocumentRecord;
+  deleteOpenApiDocument: (id: string) => void;
 }
 
 export const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);

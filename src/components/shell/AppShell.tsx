@@ -24,6 +24,11 @@ const CollectionsManagerView = lazy(() => import('../views/api/CollectionsManage
 const EnvironmentsView = lazy(() => import('../views/api/EnvironmentsView').then((m) => ({ default: m.EnvironmentsView })));
 const WebhookInspectorView = lazy(() => import('../views/api/WebhookInspectorView').then((m) => ({ default: m.WebhookInspectorView })));
 const HttpInspectorView = lazy(() => import('../views/api/HttpInspectorView').then((m) => ({ default: m.HttpInspectorView })));
+const GraphqlView = lazy(() => import('../views/api/GraphqlView').then((m) => ({ default: m.GraphqlView })));
+const WebSocketView = lazy(() => import('../views/api/WebSocketView').then((m) => ({ default: m.WebSocketView })));
+const SseView = lazy(() => import('../views/api/SseView').then((m) => ({ default: m.SseView })));
+const MockServerView = lazy(() => import('../views/api/MockServerView').then((m) => ({ default: m.MockServerView })));
+const OpenApiExplorerView = lazy(() => import('../views/api/OpenApiExplorerView').then((m) => ({ default: m.OpenApiExplorerView })));
 
 import { getToolById } from '../../registry/toolsRegistry';
 
@@ -87,6 +92,13 @@ export const AppShell: React.FC = () => {
           goForward();
           return;
         }
+      }
+
+      // Cmd/Ctrl + Shift + I -> Open OpenAPI Explorer
+      if (cmdOrCtrl && e.shiftKey && e.key.toLowerCase() === 'i') {
+        e.preventDefault();
+        setActiveView('openapi-explorer');
+        return;
       }
 
       // Esc -> Close palette / modals
@@ -185,6 +197,16 @@ export const AppShell: React.FC = () => {
         return <WebhookInspectorView />;
       case 'http-inspector':
         return <HttpInspectorView />;
+      case 'graphql':
+        return <GraphqlView />;
+      case 'websocket':
+        return <WebSocketView />;
+      case 'sse':
+        return <SseView />;
+      case 'mock-server':
+        return <MockServerView />;
+      case 'openapi-explorer':
+        return <OpenApiExplorerView />;
       default:
         return <HomeDashboard />;
     }
