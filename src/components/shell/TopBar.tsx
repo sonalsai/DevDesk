@@ -1,7 +1,7 @@
 import React from 'react';
 import { useWorkspace } from '@/hooks';
 import { TOOLS_REGISTRY } from '../../registry/toolsRegistry';
-import { Search, Moon, Sun, Keyboard, Shield, ArrowLeft } from 'lucide-react';
+import { Search, Moon, Sun, Keyboard, Shield, ArrowLeft, Settings, BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks';
 
 export const TopBar: React.FC = () => {
@@ -28,6 +28,8 @@ export const TopBar: React.FC = () => {
     switch (activeView) {
       case 'dashboard':
         return 'Dashboard';
+      case 'docs':
+        return 'App Overview & Guide';
       case 'scratchpad':
         return 'Scratchpad';
       case 'tasks':
@@ -125,8 +127,17 @@ export const TopBar: React.FC = () => {
         </button>
       </div>
 
-      {/* Right: Quick actions, Theme toggle, Shortcuts, Privacy, Avatar */}
+      {/* Right: Guide, Theme toggle, Shortcuts, Privacy, Settings */}
       <div className="top-bar-right">
+        <button
+          className={`top-bar-btn ${activeView === 'docs' ? 'active' : ''}`}
+          onClick={() => setActiveView('docs')}
+          title="App Overview & Guide"
+          aria-label="App Overview and Guide"
+        >
+          <BookOpen size={15} />
+        </button>
+
         <button
           className="top-bar-btn"
           onClick={handleToggleTheme}
@@ -155,12 +166,12 @@ export const TopBar: React.FC = () => {
         </button>
 
         <button
-          className="user-avatar-badge"
-          title="DevDesk Local Workspace"
-          aria-label="Open settings"
+          className={`top-bar-btn ${activeView === 'settings' ? 'active' : ''}`}
           onClick={() => setActiveView('settings')}
+          title="Settings"
+          aria-label="Open settings"
         >
-          DEV
+          <Settings size={15} />
         </button>
       </div>
     </header>

@@ -155,6 +155,18 @@ export const CommandPalette: React.FC = () => {
       },
     });
 
+    items.push({
+      id: 'action-docs',
+      title: 'Open App Overview & Guide',
+      subtitle: 'Complete tutorial, visual snapshots, and documentation',
+      category: 'Actions',
+      icon: BookOpen,
+      onSelect: () => {
+        setActiveView('docs');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
     // Phase 2: API & Development Actions
     items.push({
       id: 'action-api-new-request',

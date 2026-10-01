@@ -16,7 +16,7 @@ import type {
 const STORAGE_KEY = 'devdesk_workspace_v3';
 
 export const DEFAULT_SETTINGS: UserSettings = {
-  theme: 'dark',
+  theme: 'light',
   fontSize: 13,
   tabSize: 2,
   wordWrap: true,

@@ -16,6 +16,7 @@ import {
   Braces,
   Terminal,
   GitBranch,
+  Compass,
 } from 'lucide-react';
 import { useToast } from '@/hooks';
 
@@ -143,6 +144,14 @@ export const HomeDashboard: React.FC = () => {
             <button className="hero-btn hero-btn-ghost" onClick={() => setActiveView('scratchpad')}>
               <FileEdit size={15} />
               <span>Scratchpad</span>
+            </button>
+            <button
+              className="hero-btn hero-btn-ghost"
+              onClick={() => setActiveView('docs')}
+              title="Explore full app documentation and tutorial"
+            >
+              <Compass size={15} />
+              <span>App Guide & Tour</span>
             </button>
           </div>
         </section>

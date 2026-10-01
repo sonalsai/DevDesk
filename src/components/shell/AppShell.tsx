@@ -29,6 +29,7 @@ const WebSocketView = lazy(() => import('../views/api/WebSocketView').then((m) =
 const SseView = lazy(() => import('../views/api/SseView').then((m) => ({ default: m.SseView })));
 const MockServerView = lazy(() => import('../views/api/MockServerView').then((m) => ({ default: m.MockServerView })));
 const OpenApiExplorerView = lazy(() => import('../views/api/OpenApiExplorerView').then((m) => ({ default: m.OpenApiExplorerView })));
+const DocsGuideView = lazy(() => import('../views/DocsGuideView').then((m) => ({ default: m.DocsGuideView })));
 
 import { getToolById } from '../../registry/toolsRegistry';
 
@@ -158,6 +159,8 @@ export const AppShell: React.FC = () => {
     switch (activeView) {
       case 'dashboard':
         return <HomeDashboard />;
+      case 'docs':
+        return <DocsGuideView />;
       case 'scratchpad':
         return <ScratchpadView />;
       case 'tasks':

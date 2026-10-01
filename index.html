@@ -12,11 +12,14 @@
     <script>
       // Apply the saved theme before first paint (light is the default; v1 workspaces move to light once)
       try {
-        var d = JSON.parse(localStorage.getItem('devdesk_workspace_v1') || '{}');
-        var t = (d.version >= 2 && d.settings && d.settings.theme) || 'light';
+        var raw = localStorage.getItem('devdesk_workspace_v3') || localStorage.getItem('devdesk_workspace_v2') || localStorage.getItem('devdesk_workspace_v1');
+        var d = JSON.parse(raw || '{}');
+        var t = (d.settings && d.settings.theme) || 'light';
         if (t === 'system') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         document.documentElement.setAttribute('data-theme', t);
-      } catch (e) {}
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
     </script>
   </head>
   <body>

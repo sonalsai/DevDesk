@@ -89,6 +89,7 @@ export * from './api';
 
 export type ViewType =
   | 'dashboard'
+  | 'docs'
   | 'scratchpad'
   | 'tasks'
   | 'projects'

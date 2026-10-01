@@ -12,9 +12,6 @@ import {
   Star,
   Clock,
   Code2,
-  Settings,
-  Keyboard,
-  Shield,
   Send,
   Globe,
   Layers,
@@ -31,8 +28,6 @@ export const Sidebar: React.FC = () => {
     setActiveView,
     isSidebarCollapsed,
     setIsSidebarCollapsed,
-    setIsShortcutsOpen,
-    setIsPrivacyModalOpen,
     data,
   } = useWorkspace();
 
@@ -298,42 +293,6 @@ export const Sidebar: React.FC = () => {
             )}
           </button>
         </div>
-      </div>
-
-      {/* FOOTER SECTION: Settings, Keyboard Shortcuts, Privacy */}
-      <div className="sidebar-footer">
-        <button
-          className={`sidebar-nav-item ${activeView === 'settings' ? 'active' : ''}`}
-          onClick={() => setActiveView('settings')}
-          title="Settings"
-        >
-          <div className="nav-item-left">
-            <Settings size={16} />
-            <span className="nav-item-label">Settings</span>
-          </div>
-        </button>
-
-        <button
-          className="sidebar-nav-item"
-          onClick={() => setIsShortcutsOpen(true)}
-          title="Keyboard Shortcuts"
-        >
-          <div className="nav-item-left">
-            <Keyboard size={16} />
-            <span className="nav-item-label">Shortcuts</span>
-          </div>
-        </button>
-
-        <button
-          className="sidebar-nav-item"
-          onClick={() => setIsPrivacyModalOpen(true)}
-          title="Privacy Policy"
-        >
-          <div className="nav-item-left">
-            <Shield size={16} />
-            <span className="nav-item-label">Privacy</span>
-          </div>
-        </button>
       </div>
     </aside>
   );
