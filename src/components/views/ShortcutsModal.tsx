@@ -60,6 +60,31 @@ const SHORTCUTS: ShortcutRow[] = [
     context: 'Code Editor',
   },
   {
+    keys: ['⌘', '⇧', 'G', '/', 'Ctrl', 'Shift', 'G'],
+    description: 'Open Git & Version Control Workspace',
+    context: 'Global',
+  },
+  {
+    keys: ['⌘', '⇧', 'L', '/', 'Ctrl', 'Shift', 'L'],
+    description: 'Open Local Log Viewer',
+    context: 'Global',
+  },
+  {
+    keys: ['⌘', '⇧', 'Y', '/', 'Ctrl', 'Shift', 'Y'],
+    description: 'Open YAML / Configuration Toolkit',
+    context: 'Global',
+  },
+  {
+    keys: ['⌘', '⇧', 'E', '/', 'Ctrl', 'Shift', 'E'],
+    description: 'Open Environment & .env File Manager',
+    context: 'Global',
+  },
+  {
+    keys: ['⌘', 'Enter', '/', 'Ctrl', 'Enter'],
+    description: 'Commit staged changes (when focused on commit message)',
+    context: 'Git Workspace',
+  },
+  {
     keys: ['↑', '↓', 'Enter'],
     description: 'Navigate and select command palette items',
     context: 'Command Palette',

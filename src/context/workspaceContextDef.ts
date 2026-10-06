@@ -20,6 +20,11 @@ import type {
   WebSocketConnection,
   SseConnection,
   OpenApiDocumentRecord,
+  GitRepository,
+  GitSettings,
+  SSHProfile,
+  LogEntry,
+  EnvFileRecord,
 } from '../types';
 
 export interface WorkspaceContextType {
@@ -150,6 +155,60 @@ export interface WorkspaceContextType {
   openApiDocuments: OpenApiDocumentRecord[];
   addOpenApiDocument: (doc: Omit<OpenApiDocumentRecord, 'id' | 'importedAt'>) => OpenApiDocumentRecord;
   deleteOpenApiDocument: (id: string) => void;
+
+  // Phase 4: Git & Version Control
+  gitRepositories: GitRepository[];
+  activeGitRepoId: string | null;
+  activeGitRepo: GitRepository | undefined;
+  gitSettings: GitSettings;
+  updateGitSettings: (updates: Partial<GitSettings>) => void;
+  setActiveGitRepoId: (repoId: string | null) => void;
+  addGitRepository: (repo: GitRepository) => void;
+  updateGitRepository: (id: string, updates: Partial<GitRepository>) => void;
+  deleteGitRepository: (id: string) => void;
+  stageGitFile: (repoId: string, changeId: string) => void;
+  unstageGitFile: (repoId: string, changeId: string) => void;
+  stageAllGitFiles: (repoId: string) => { sensitiveWarnings: string[] };
+  unstageAllGitFiles: (repoId: string) => void;
+  toggleGitHunkStage: (repoId: string, changeId: string, hunkId: string, shouldStage: boolean) => void;
+  discardGitFileChanges: (repoId: string, changeId: string) => void;
+  discardAllGitChanges: (repoId: string) => void;
+  commitGitChanges: (repoId: string, message: string, isAmend?: boolean) => { success: boolean; error?: string };
+  createGitBranch: (repoId: string, name: string, basedOnCommit?: string) => { success: boolean; error?: string };
+  switchGitBranch: (repoId: string, targetBranchName: string, force?: boolean) => { success: boolean; error?: string; requiresStashOrForce?: boolean };
+  renameGitBranch: (repoId: string, oldName: string, newName: string) => { success: boolean; error?: string };
+  deleteGitBranch: (repoId: string, branchName: string) => { success: boolean; error?: string };
+  mergeGitBranch: (repoId: string, sourceBranchName: string) => { success: boolean; merged: boolean; hasConflicts: boolean; summary: string };
+  resolveGitConflict: (repoId: string, filePath: string, resolvedContent?: string) => void;
+  createGitStash: (repoId: string, message?: string) => void;
+  applyGitStash: (repoId: string, stashId: string) => { success: boolean; error?: string };
+  popGitStash: (repoId: string, stashId: string) => { success: boolean; error?: string };
+  dropGitStash: (repoId: string, stashId: string) => void;
+  createGitTag: (repoId: string, name: string, commitHash: string, message?: string, tagger?: string) => { success: boolean; error?: string };
+  deleteGitTag: (repoId: string, tagName: string) => void;
+  addGitRemote: (repoId: string, name: string, fetchUrl: string, pushUrl?: string) => { success: boolean; error?: string };
+  editGitRemote: (repoId: string, oldName: string, newName: string, fetchUrl: string, pushUrl?: string) => { success: boolean; error?: string };
+  removeGitRemote: (repoId: string, name: string) => void;
+  fetchGitRemote: (repoId: string, remoteName?: string) => string;
+  pullGitRemote: (repoId: string, remoteName?: string) => { success: boolean; summary: string; error?: string };
+  pushGitRemote: (repoId: string, remoteName?: string, authProvided?: boolean) => { success: boolean; summary: string; error?: string };
+  linkProjectToGitRepo: (projectId: string, repoId: string | null) => void;
+
+  // Phase 5: Essential Developer Integrations (SSH, Logs, EnvFiles)
+  sshProfiles: SSHProfile[];
+  addSSHProfile: (profile: Omit<SSHProfile, 'id' | 'createdAt'>) => SSHProfile;
+  updateSSHProfile: (id: string, updates: Partial<SSHProfile>) => void;
+  deleteSSHProfile: (id: string) => void;
+  duplicateSSHProfile: (id: string) => SSHProfile | null;
+
+  logs: LogEntry[];
+  logEntries: LogEntry[];
+  addLogEntry: (entry: Omit<LogEntry, 'id'>) => void;
+  clearLogs: () => void;
+
+  envFiles: EnvFileRecord[];
+  saveEnvFile: (name: string, content: string) => void;
+  deleteEnvFile: (id: string) => void;
 }
 
 export const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);

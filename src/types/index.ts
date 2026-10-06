@@ -55,6 +55,10 @@ export interface Project {
   color: string;
   links: ProjectLink[];
   notes?: string;
+  gitRepositoryId?: string;
+  gitRepoUrl?: string;
+  gitBranch?: string;
+  logSource?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -86,6 +90,10 @@ export interface FavoriteItem {
 }
 
 export * from './api';
+export * from './git';
+export * from './ssh';
+export * from './logs';
+export * from './config';
 
 export type ViewType =
   | 'dashboard'
@@ -109,7 +117,11 @@ export type ViewType =
   | 'websocket'
   | 'sse'
   | 'mock-server'
-  | 'openapi-explorer';
+  | 'openapi-explorer'
+  | 'git'
+  | 'ssh'
+  | 'logs'
+  | 'yaml-toolkit';
 
 import type {
   ApiCollection,
@@ -124,6 +136,10 @@ import type {
   MockRequestLog,
   OpenApiDocumentRecord,
 } from './api';
+import type { GitRepository, GitSettings } from './git';
+import type { SSHProfile } from './ssh';
+import type { LogEntry } from './logs';
+import type { EnvFileRecord } from './config';
 
 export interface WorkspaceData {
   tasks: Task[];
@@ -151,4 +167,14 @@ export interface WorkspaceData {
   mockEndpoints?: MockEndpoint[];
   mockLogs?: MockRequestLog[];
   openApiDocuments?: OpenApiDocumentRecord[];
+
+  // Phase 4: Git & Version Control
+  gitRepositories?: GitRepository[];
+  activeGitRepoId?: string | null;
+  gitSettings?: GitSettings;
+
+  // Phase 5: Essential Developer Integrations
+  sshProfiles?: SSHProfile[];
+  logEntries?: LogEntry[];
+  envFiles?: EnvFileRecord[];
 }

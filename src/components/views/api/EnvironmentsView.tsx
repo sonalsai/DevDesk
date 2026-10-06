@@ -11,11 +11,19 @@ import {
   ShieldCheck,
   Layers,
   Search,
+  FileCode,
+  Sparkles,
 } from 'lucide-react';
 import { useWorkspace } from '@/hooks';
 import { useToast } from '@/hooks';
 import type { Environment, EnvironmentVariable } from '../../../types/api';
 import { compareEnvironments, exportDotEnvExample } from '../../../services/environmentService';
+import {
+  generateEnvExample,
+  compareEnvFiles,
+  stringifyEnvFile,
+} from '../../../services/config/envFileService';
+import type { EnvVariableEntry } from '../../../types/config';
 
 export const EnvironmentsView: React.FC = () => {
   const {
@@ -26,6 +34,9 @@ export const EnvironmentsView: React.FC = () => {
     updateEnvironment,
     deleteEnvironment,
     duplicateEnvironment,
+    envFiles,
+    saveEnvFile,
+    deleteEnvFile,
   } = useWorkspace();
 
   const { showToast } = useToast();
@@ -35,7 +46,23 @@ export const EnvironmentsView: React.FC = () => {
     environments.length > 0 ? (activeEnvironment?.id || environments[0].id) : ''
   );
 
-  const [viewTab, setViewTab] = useState<'variables' | 'compare'>('variables');
+  const [viewTab, setViewTab] = useState<'variables' | 'compare' | 'dotenv'>('variables');
+
+  // .env Files State
+  const [selectedEnvFileId, setSelectedEnvFileId] = useState<string>(
+    envFiles && envFiles.length > 0 ? envFiles[0].id : ''
+  );
+  const [dotenvSearch, setDotenvSearch] = useState('');
+  const [revealedDotenvKeys, setRevealedDotenvKeys] = useState<Record<string, boolean>>({});
+  const [compareDotenvAId, setCompareDotenvAId] = useState<string>(
+    envFiles && envFiles.length > 0 ? envFiles[0].id : ''
+  );
+  const [compareDotenvBId, setCompareDotenvBId] = useState<string>(
+    envFiles && envFiles.length > 1 ? envFiles[1].id : ''
+  );
+  const [newDotenvKey, setNewDotenvKey] = useState('');
+  const [newDotenvVal, setNewDotenvVal] = useState('');
+  const [isAddingDotenvVar, setIsAddingDotenvVar] = useState(false);
 
   // Comparison State
   const [compareEnvAId, setCompareEnvAId] = useState<string>(
@@ -163,6 +190,13 @@ export const EnvironmentsView: React.FC = () => {
             <GitCompare size={14} />
             <span>Compare Environments</span>
           </button>
+          <button
+            className={`btn ${viewTab === 'dotenv' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setViewTab('dotenv')}
+          >
+            <FileCode size={14} />
+            <span>.env File Tools</span>
+          </button>
         </div>
 
         {viewTab === 'variables' && (
@@ -199,7 +233,7 @@ export const EnvironmentsView: React.FC = () => {
               <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Environment Name *</label>
               <input
                 type="text"
-                placeholder="e.g. Staging, Production, Local Docker"
+                placeholder="e.g. Staging, Production, Local Development"
                 className="input-field"
                 value={newEnvName}
                 onChange={(e) => setNewEnvName(e.target.value)}
@@ -654,6 +688,418 @@ export const EnvironmentsView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* TAB 3: .ENV FILE TOOLS */}
+      {viewTab === 'dotenv' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 16, minHeight: '520px' }}>
+          {/* Files Sidebar */}
+          <div
+            className="card"
+            style={{
+              padding: 10,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+              background: 'var(--bg-surface)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px' }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>
+                .env Files ({envFiles.length})
+              </span>
+              <button
+                className="btn btn-secondary"
+                style={{ padding: '2px 6px', fontSize: 11 }}
+                onClick={() => {
+                  const name = prompt('Enter new .env file name (e.g. .env.local, .env.staging):', '.env.local');
+                  if (name && name.trim()) {
+                    saveEnvFile(name.trim(), '# New environment file\nPORT=3000\n');
+                    showToast(`Created ${name.trim()}`, 'info');
+                  }
+                }}
+              >
+                <Plus size={11} />
+                New
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto', flex: 1 }}>
+              {envFiles.map((file) => {
+                const isSelected = (selectedEnvFileId || envFiles[0]?.id) === file.id;
+                return (
+                  <div
+                    key={file.id}
+                    onClick={() => setSelectedEnvFileId(file.id)}
+                    style={{
+                      padding: '8px 10px',
+                      borderRadius: 6,
+                      background: isSelected ? 'var(--bg-elevated)' : 'transparent',
+                      border: isSelected ? '1px solid var(--accent)' : '1px solid transparent',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      fontSize: 13,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <FileCode size={14} color={isSelected ? 'var(--accent)' : 'var(--text-secondary)'} />
+                      <span style={{ fontWeight: isSelected ? 600 : 400 }}>{file.name}</span>
+                    </div>
+
+                    {envFiles.length > 1 && (
+                      <button
+                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 2 }}
+                        title="Delete file"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`Delete ${file.name}?`)) {
+                            deleteEnvFile(file.id);
+                            showToast(`Deleted ${file.name}`, 'info');
+                          }
+                        }}
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Active .env File Editor & Actions */}
+          {(() => {
+            const activeFile = envFiles.find((f) => f.id === (selectedEnvFileId || envFiles[0]?.id)) || envFiles[0];
+            if (!activeFile) {
+              return (
+                <div className="card" style={{ padding: 24, textAlign: 'center', color: 'var(--text-tertiary)' }}>
+                  No .env files available.
+                </div>
+              );
+            }
+
+            const activeVars = (activeFile.variables as EnvVariableEntry[]).filter((v: EnvVariableEntry) =>
+              !dotenvSearch || v.key.toLowerCase().includes(dotenvSearch.toLowerCase())
+            );
+
+            const fileA = envFiles.find((f) => f.id === (compareDotenvAId || envFiles[0]?.id)) || envFiles[0];
+            const fileB = envFiles.find((f) => f.id === (compareDotenvBId || envFiles[1]?.id || envFiles[0]?.id)) || envFiles[0];
+            const comparedResults = compareEnvFiles(fileA.content, fileB.content);
+
+            return (
+              <div className="card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {/* Header actions */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <FileCode size={18} color="var(--accent)" />
+                    <span style={{ fontWeight: 600, fontSize: 15 }}>{activeFile.name}</span>
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                      ({activeFile.variables.length} keys)
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <button
+                      className="btn btn-secondary"
+                      style={{ fontSize: 12, padding: '4px 10px' }}
+                      onClick={() => {
+                        const example = generateEnvExample(activeFile.content);
+                        saveEnvFile('.env.example', example);
+                        showToast('Generated and saved .env.example with sanitized values', 'info');
+                      }}
+                      title="Generate sanitized .env.example template"
+                    >
+                      <Sparkles size={13} color="var(--accent)" />
+                      Generate .env.example
+                    </button>
+
+                    <button
+                      className="btn btn-secondary"
+                      style={{ fontSize: 12, padding: '4px 10px' }}
+                      onClick={() => {
+                        navigator.clipboard.writeText(activeFile.content);
+                        showToast(`Copied ${activeFile.name} to clipboard`, 'info');
+                      }}
+                    >
+                      <Copy size={13} />
+                      Copy
+                    </button>
+
+                    <button
+                      className="btn btn-secondary"
+                      style={{ fontSize: 12, padding: '4px 10px' }}
+                      onClick={() => {
+                        const blob = new Blob([activeFile.content], { type: 'text/plain' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = activeFile.name;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        showToast(`Downloaded ${activeFile.name}`, 'info');
+                      }}
+                    >
+                      <Download size={13} />
+                      Download
+                    </button>
+                  </div>
+                </div>
+
+                {/* Submode Toolbar */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, maxWidth: 320 }}>
+                    <Search size={14} color="var(--text-muted)" />
+                    <input
+                      type="text"
+                      className="input-field"
+                      placeholder="Filter keys in this .env file..."
+                      value={dotenvSearch}
+                      onChange={(e) => setDotenvSearch(e.target.value)}
+                      style={{ fontSize: 12, padding: '4px 8px' }}
+                    />
+                  </div>
+
+                  <button
+                    className="btn btn-primary"
+                    style={{ fontSize: 12, padding: '4px 10px' }}
+                    onClick={() => setIsAddingDotenvVar(!isAddingDotenvVar)}
+                  >
+                    <Plus size={12} />
+                    Add Variable
+                  </button>
+                </div>
+
+                {/* Inline Add Variable Form */}
+                {isAddingDotenvVar && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: 8,
+                      padding: 10,
+                      background: 'var(--bg-elevated)',
+                      borderRadius: 6,
+                      border: '1px solid var(--border-color)',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <input
+                      type="text"
+                      placeholder="VARIABLE_KEY"
+                      className="input-field"
+                      style={{ flex: 1, fontFamily: 'var(--font-mono, monospace)', fontSize: 12 }}
+                      value={newDotenvKey}
+                      onChange={(e) => setNewDotenvKey(e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      placeholder="value"
+                      className="input-field"
+                      style={{ flex: 1, fontSize: 12 }}
+                      value={newDotenvVal}
+                      onChange={(e) => setNewDotenvVal(e.target.value)}
+                    />
+                    <button
+                      className="btn btn-primary"
+                      style={{ fontSize: 12 }}
+                      onClick={() => {
+                        if (!newDotenvKey.trim()) return;
+                        const updated = [
+                          ...activeFile.variables,
+                          {
+                            id: `var-${Date.now()}`,
+                            key: newDotenvKey.trim().toUpperCase(),
+                            value: newDotenvVal,
+                            isSecret: /(password|secret|key|token|auth)/i.test(newDotenvKey),
+                            isActive: true,
+                          },
+                        ];
+                        saveEnvFile(activeFile.name, stringifyEnvFile(updated));
+                        setNewDotenvKey('');
+                        setNewDotenvVal('');
+                        setIsAddingDotenvVar(false);
+                        showToast(`Added ${newDotenvKey} to ${activeFile.name}`, 'info');
+                      }}
+                    >
+                      Save
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      style={{ fontSize: 12 }}
+                      onClick={() => setIsAddingDotenvVar(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+
+                {/* Variables List */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, overflowY: 'auto', maxHeight: 340 }}>
+                  {activeVars.map((v: EnvVariableEntry) => {
+                    const isRevealed = Boolean(revealedDotenvKeys[v.key]);
+
+                    return (
+                      <div
+                        key={v.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '8px 12px',
+                          background: 'var(--bg-surface)',
+                          borderRadius: 6,
+                          border: '1px solid var(--border-color)',
+                          gap: 10,
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 200 }}>
+                          <code style={{ fontWeight: 600, fontSize: 12, color: 'var(--accent)' }}>
+                            {v.key}
+                          </code>
+                          {v.isSecret && (
+                            <span style={{ fontSize: 10, padding: '1px 5px', borderRadius: 4, background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' }}>
+                              secret
+                            </span>
+                          )}
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
+                          <code style={{ fontSize: 12, color: 'var(--text-secondary)', wordBreak: 'break-all' }}>
+                            {v.isSecret && !isRevealed ? '••••••••••••' : v.value}
+                          </code>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          {v.isSecret && (
+                            <button
+                              className="btn btn-secondary"
+                              style={{ padding: '2px 6px' }}
+                              title={isRevealed ? 'Mask value' : 'Reveal value'}
+                              onClick={() =>
+                                setRevealedDotenvKeys((prev) => ({ ...prev, [v.key]: !prev[v.key] }))
+                              }
+                            >
+                              {isRevealed ? <EyeOff size={12} /> : <Eye size={12} />}
+                            </button>
+                          )}
+
+                          <button
+                            className="btn btn-secondary"
+                            style={{ padding: '2px 6px' }}
+                            title="Copy value"
+                            onClick={() => {
+                              navigator.clipboard.writeText(v.value);
+                              showToast(`Copied ${v.key}`, 'info');
+                            }}
+                          >
+                            <Copy size={12} />
+                          </button>
+
+                          <button
+                            className="btn btn-secondary"
+                            style={{ padding: '2px 6px', color: 'var(--danger)' }}
+                            title="Delete variable"
+                            onClick={() => {
+                              const updated = (activeFile.variables as EnvVariableEntry[]).filter((item: EnvVariableEntry) => item.key !== v.key);
+                              saveEnvFile(activeFile.name, stringifyEnvFile(updated));
+                              showToast(`Deleted ${v.key}`, 'info');
+                            }}
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {activeVars.length === 0 && (
+                    <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 12 }}>
+                      No variables match your filter in this file.
+                    </div>
+                  )}
+                </div>
+
+                {/* Compare .env section */}
+                <div style={{ marginTop: 12, borderTop: '1px solid var(--border-color)', paddingTop: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, fontSize: 13 }}>
+                      <GitCompare size={14} color="var(--accent)" />
+                      <span>Compare .env Files (Secrets Stay Masked)</span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <select
+                        className="input-select"
+                        style={{ fontSize: 12, padding: '3px 8px' }}
+                        value={compareDotenvAId || envFiles[0]?.id}
+                        onChange={(e) => setCompareDotenvAId(e.target.value)}
+                      >
+                        {envFiles.map((f) => (
+                          <option key={f.id} value={f.id}>
+                            {f.name}
+                          </option>
+                        ))}
+                      </select>
+                      <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>vs</span>
+                      <select
+                        className="input-select"
+                        style={{ fontSize: 12, padding: '3px 8px' }}
+                        value={compareDotenvBId || envFiles[1]?.id || envFiles[0]?.id}
+                        onChange={(e) => setCompareDotenvBId(e.target.value)}
+                      >
+                        {envFiles.map((f) => (
+                          <option key={f.id} value={f.id}>
+                            {f.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 180, overflowY: 'auto' }}>
+                    {comparedResults.map((item) => (
+                      <div
+                        key={item.key}
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '180px 1fr 1fr 100px',
+                          padding: '6px 10px',
+                          fontSize: 12,
+                          background: 'var(--bg-surface)',
+                          borderRadius: 4,
+                          alignItems: 'center',
+                          gap: 8,
+                        }}
+                      >
+                        <code style={{ fontWeight: 600, color: 'var(--accent)' }}>{item.key}</code>
+                        <span style={{ color: 'var(--text-secondary)' }}>{item.valA ?? '—'}</span>
+                        <span style={{ color: 'var(--text-secondary)' }}>{item.valB ?? '—'}</span>
+                        <div>
+                          {item.status === 'same' && (
+                            <span style={{ color: 'var(--success)', fontWeight: 600 }}>✓ Same</span>
+                          )}
+                          {item.status === 'different' && (
+                            <span style={{ color: 'var(--warning)', fontWeight: 600 }}>≠ Different</span>
+                          )}
+                          {item.status === 'missing_in_b' && (
+                            <span style={{ color: 'var(--danger)', fontWeight: 600 }}>Missing in B</span>
+                          )}
+                          {item.status === 'missing_in_a' && (
+                            <span style={{ color: 'var(--danger)', fontWeight: 600 }}>Missing in A</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
     </div>
   );
 };
+

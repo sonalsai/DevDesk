@@ -25,6 +25,16 @@ import {
   Activity,
   Server,
   BookOpen,
+  GitBranch,
+  GitCommit,
+  GitPullRequest,
+  GitMerge,
+  Archive,
+  Tag,
+  History,
+  Terminal,
+  ScrollText,
+  FileCode,
 } from 'lucide-react';
 import { useToast } from '@/hooks';
 
@@ -304,6 +314,270 @@ export const CommandPalette: React.FC = () => {
       },
     });
 
+    // Phase 4: Git & Version Control Actions
+    items.push({
+      id: 'action-git-open',
+      title: 'Git: Open Git Workspace',
+      subtitle: 'Open repository management and source control',
+      category: 'Actions',
+      icon: GitBranch,
+      shortcut: '⌘⇧G',
+      onSelect: () => {
+        setActiveView('git');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-git-changes',
+      title: 'Git: Open Changes & Stage',
+      subtitle: 'Inspect modified files and stage hunks',
+      category: 'Actions',
+      icon: FileText,
+      onSelect: () => {
+        setActiveView('git');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-git-history',
+      title: 'Git: Open Commit History',
+      subtitle: 'Browse commit logs, diffs, and SHAs',
+      category: 'Actions',
+      icon: History,
+      onSelect: () => {
+        setActiveView('git');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-git-branch-create',
+      title: 'Git: Create Branch',
+      subtitle: 'Create a new feature or fix branch',
+      category: 'Actions',
+      icon: GitBranch,
+      onSelect: () => {
+        setActiveView('git');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-git-branch-switch',
+      title: 'Git: Switch Branch',
+      subtitle: 'Checkout another branch',
+      category: 'Actions',
+      icon: GitBranch,
+      onSelect: () => {
+        setActiveView('git');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-git-merge',
+      title: 'Git: Merge Branch',
+      subtitle: 'Merge branches and resolve conflicts',
+      category: 'Actions',
+      icon: GitMerge,
+      onSelect: () => {
+        setActiveView('git');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-git-commit',
+      title: 'Git: Commit Changes',
+      subtitle: 'Record staged changes to local branch',
+      category: 'Actions',
+      icon: GitCommit,
+      shortcut: '⌘↵',
+      onSelect: () => {
+        setActiveView('git');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-git-pull',
+      title: 'Git: Pull from Remote',
+      subtitle: 'Fetch and integrate remote commits',
+      category: 'Actions',
+      icon: ArrowRight,
+      onSelect: () => {
+        setActiveView('git');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-git-push',
+      title: 'Git: Push to Remote',
+      subtitle: 'Publish local commits upstream',
+      category: 'Actions',
+      icon: ArrowRight,
+      onSelect: () => {
+        setActiveView('git');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-git-fetch',
+      title: 'Git: Fetch Remotes',
+      subtitle: 'Download objects and refs from remote',
+      category: 'Actions',
+      icon: GitPullRequest,
+      onSelect: () => {
+        setActiveView('git');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-git-stash-create',
+      title: 'Git: Create Stash',
+      subtitle: 'Save modified working directory files',
+      category: 'Actions',
+      icon: Archive,
+      onSelect: () => {
+        setActiveView('git');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-git-stash-view',
+      title: 'Git: View Stashes',
+      subtitle: 'Inspect and pop saved stashes',
+      category: 'Actions',
+      icon: Archive,
+      onSelect: () => {
+        setActiveView('git');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-git-tag-create',
+      title: 'Git: Create Tag',
+      subtitle: 'Create a lightweight or annotated release tag',
+      category: 'Actions',
+      icon: Tag,
+      onSelect: () => {
+        setActiveView('git');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-git-remotes',
+      title: 'Git: Manage Remotes',
+      subtitle: 'Configure origin and upstream repositories',
+      category: 'Actions',
+      icon: GitPullRequest,
+      onSelect: () => {
+        setActiveView('git');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-git-gitignore',
+      title: 'Git: .gitignore Helper',
+      subtitle: 'Generate patterns for Node, React, Python, Rust',
+      category: 'Actions',
+      icon: Shield,
+      onSelect: () => {
+        setActiveView('git');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    // Phase 5: Essential Developer Integrations Actions
+    items.push({
+      id: 'action-ssh-open',
+      title: 'SSH: Open Terminal & Profiles',
+      subtitle: 'Connect to remote servers and manage SSH profiles',
+      category: 'Actions',
+      icon: Terminal,
+      onSelect: () => {
+        setActiveView('ssh');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-yaml-open',
+      title: 'YAML: Open Toolkit',
+      subtitle: 'Format, validate, and convert YAML & JSON',
+      category: 'Actions',
+      icon: FileCode,
+      shortcut: '⌘⇧Y',
+      onSelect: () => {
+        setActiveView('yaml-toolkit');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-env-dotenv',
+      title: 'Environment: Open .env File Tools',
+      subtitle: 'Inspect, compare, and generate .env.example',
+      category: 'Actions',
+      icon: Layers,
+      shortcut: '⌘⇧E',
+      onSelect: () => {
+        setActiveView('environments');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    items.push({
+      id: 'action-logs-open',
+      title: 'Logs: Open Local Log Viewer',
+      subtitle: 'Inspect local processes, build output, and application logs',
+      category: 'Actions',
+      icon: ScrollText,
+      shortcut: '⌘⇧L',
+      onSelect: () => {
+        setActiveView('logs');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
+    // Searchable Git Repositories and Branches
+    data.gitRepositories?.forEach((r) => {
+      items.push({
+        id: `git-repo-${r.id}`,
+        title: `Repo: ${r.name}`,
+        subtitle: `Branch: ${r.currentBranch} • ${r.commits.length} commits`,
+        category: 'Tools',
+        icon: GitBranch,
+        onSelect: () => {
+          setActiveView('git');
+          setIsCommandPaletteOpen(false);
+        },
+      });
+
+      r.branches.forEach((b) => {
+        items.push({
+          id: `git-branch-${r.id}-${b.name}`,
+          title: `Branch: ${b.name}`,
+          subtitle: `${r.name} • ${b.isCurrent ? 'Current' : 'Branch'}`,
+          category: 'Tools',
+          icon: GitBranch,
+          onSelect: () => {
+            setActiveView('git');
+            setIsCommandPaletteOpen(false);
+          },
+        });
+      });
+    });
+
     // Searchable API Requests
     data.apiRequests?.forEach((req) => {
       const coll = data.apiCollections.find((c) => c.id === req.collectionId);
@@ -391,6 +665,21 @@ export const CommandPalette: React.FC = () => {
         icon: BookOpen,
         onSelect: () => {
           setActiveView('openapi-explorer');
+          setIsCommandPaletteOpen(false);
+        },
+      });
+    });
+
+    // Searchable SSH Profiles
+    data.sshProfiles?.forEach((p) => {
+      items.push({
+        id: `ssh-p-${p.id}`,
+        title: `SSH: ${p.name}`,
+        subtitle: `${p.username}@${p.host}:${p.port}`,
+        category: 'Tools',
+        icon: Terminal,
+        onSelect: () => {
+          setActiveView('ssh');
           setIsCommandPaletteOpen(false);
         },
       });
@@ -497,6 +786,19 @@ export const CommandPalette: React.FC = () => {
       },
     });
 
+    items.push({
+      id: 'nav-git',
+      title: 'Git & Version Control',
+      subtitle: 'Repository management, changes, commits, diffs, branches',
+      category: 'Navigation',
+      icon: GitBranch,
+      shortcut: '⌘⇧G',
+      onSelect: () => {
+        setActiveView('git');
+        setIsCommandPaletteOpen(false);
+      },
+    });
+
     return items;
   }, [
     data.settings.theme,
@@ -507,6 +809,8 @@ export const CommandPalette: React.FC = () => {
     data.webSocketConnections,
     data.sseConnections,
     data.openApiDocuments,
+    data.gitRepositories,
+    data.sshProfiles,
     createNewTab,
     openRequestInTab,
     setActiveView,

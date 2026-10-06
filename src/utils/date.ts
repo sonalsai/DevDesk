@@ -25,6 +25,21 @@ export function getTodayDateString(): string {
 }
 
 /**
+ * Format timestamp into readable localized date and time string
+ */
+export function formatDate(timestamp: string): string {
+  const d = new Date(timestamp);
+  if (isNaN(d.getTime())) return timestamp;
+  return d.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+/**
  * Generate a unique ID with optional prefix
  */
 export function generateUniqueId(prefix = 'id'): string {

@@ -11,7 +11,12 @@ import type {
   WebSocketConnection,
   SseConnection,
   OpenApiDocumentRecord,
+  GitSettings,
 } from '../types';
+import { createDemoRepository } from './git';
+import { INITIAL_DEMO_SSH_PROFILES } from './ssh/sshService';
+import { INITIAL_DEMO_LOGS } from './logs/logService';
+import { INITIAL_DEMO_ENV_FILES } from './config/envFileService';
 
 const STORAGE_KEY = 'devdesk_workspace_v3';
 
@@ -371,6 +376,16 @@ export const DEFAULT_SSE_CONNECTIONS: SseConnection[] = [
 // Phase 3: Default OpenAPI Documents
 export const DEFAULT_OPENAPI_DOCUMENTS: OpenApiDocumentRecord[] = [];
 
+// Phase 4: Default Git Settings
+export const DEFAULT_GIT_SETTINGS: GitSettings = {
+  defaultBranch: 'main',
+  defaultDiffMode: 'unified',
+  confirmDestructive: true,
+  authorName: 'Developer',
+  authorEmail: 'developer@devdesk.local',
+  autoFetchIntervalMinutes: 0,
+};
+
 export const INITIAL_WORKSPACE: WorkspaceData = {
   tasks: [],
   snippets: [],
@@ -397,6 +412,16 @@ export const INITIAL_WORKSPACE: WorkspaceData = {
   mockEndpoints: DEFAULT_MOCK_ENDPOINTS,
   mockLogs: [],
   openApiDocuments: DEFAULT_OPENAPI_DOCUMENTS,
+
+  // Phase 4: Git & Version Control
+  gitRepositories: [createDemoRepository()],
+  activeGitRepoId: 'repo-demo-devdesk',
+  gitSettings: DEFAULT_GIT_SETTINGS,
+
+  // Phase 5: Essential Developer Integrations
+  sshProfiles: INITIAL_DEMO_SSH_PROFILES,
+  logEntries: INITIAL_DEMO_LOGS,
+  envFiles: INITIAL_DEMO_ENV_FILES,
 };
 
 export function migrateWorkspaceData(parsed: any): WorkspaceData {
@@ -451,6 +476,24 @@ export function migrateWorkspaceData(parsed: any): WorkspaceData {
       : DEFAULT_MOCK_ENDPOINTS,
     mockLogs: Array.isArray(parsed.mockLogs) ? parsed.mockLogs : [],
     openApiDocuments: Array.isArray(parsed.openApiDocuments) ? parsed.openApiDocuments : [],
+
+    // Phase 4: Git & Version Control
+    gitRepositories: Array.isArray(parsed.gitRepositories) && parsed.gitRepositories.length > 0
+      ? parsed.gitRepositories
+      : [createDemoRepository()],
+    activeGitRepoId: parsed.activeGitRepoId || 'repo-demo-devdesk',
+    gitSettings: { ...DEFAULT_GIT_SETTINGS, ...(parsed.gitSettings || {}) },
+
+    // Phase 5: Essential Developer Integrations
+    sshProfiles: Array.isArray(parsed.sshProfiles) && parsed.sshProfiles.length > 0
+      ? parsed.sshProfiles
+      : INITIAL_DEMO_SSH_PROFILES,
+    logEntries: Array.isArray(parsed.logEntries) && parsed.logEntries.length > 0
+      ? parsed.logEntries
+      : INITIAL_DEMO_LOGS,
+    envFiles: Array.isArray(parsed.envFiles) && parsed.envFiles.length > 0
+      ? parsed.envFiles
+      : INITIAL_DEMO_ENV_FILES,
   };
 }
 
@@ -555,6 +598,16 @@ export function parseImportedWorkspace(jsonStr: string): WorkspaceData {
     mockEndpoints: Array.isArray(parsed.mockEndpoints) ? parsed.mockEndpoints : DEFAULT_MOCK_ENDPOINTS,
     mockLogs: Array.isArray(parsed.mockLogs) ? parsed.mockLogs : [],
     openApiDocuments: Array.isArray(parsed.openApiDocuments) ? parsed.openApiDocuments : [],
+
+    // Phase 4 items
+    gitRepositories: Array.isArray(parsed.gitRepositories) ? parsed.gitRepositories : [createDemoRepository()],
+    activeGitRepoId: parsed.activeGitRepoId || 'repo-demo-devdesk',
+    gitSettings: { ...DEFAULT_GIT_SETTINGS, ...(parsed.gitSettings || {}) },
+
+    // Phase 5 items
+    sshProfiles: Array.isArray(parsed.sshProfiles) ? parsed.sshProfiles : INITIAL_DEMO_SSH_PROFILES,
+    logEntries: Array.isArray(parsed.logEntries) ? parsed.logEntries : INITIAL_DEMO_LOGS,
+    envFiles: Array.isArray(parsed.envFiles) ? parsed.envFiles : INITIAL_DEMO_ENV_FILES,
   };
 }
 

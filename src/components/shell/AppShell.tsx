@@ -29,6 +29,10 @@ const WebSocketView = lazy(() => import('../views/api/WebSocketView').then((m) =
 const SseView = lazy(() => import('../views/api/SseView').then((m) => ({ default: m.SseView })));
 const MockServerView = lazy(() => import('../views/api/MockServerView').then((m) => ({ default: m.MockServerView })));
 const OpenApiExplorerView = lazy(() => import('../views/api/OpenApiExplorerView').then((m) => ({ default: m.OpenApiExplorerView })));
+const GitWorkspaceView = lazy(() => import('../views/git/GitWorkspaceView').then((m) => ({ default: m.GitWorkspaceView })));
+const SshWorkspaceView = lazy(() => import('../views/ssh/SshWorkspaceView').then((m) => ({ default: m.SshWorkspaceView })));
+const LogViewer = lazy(() => import('../views/logs/LogViewer').then((m) => ({ default: m.LogViewer })));
+const YamlToolkitView = lazy(() => import('../views/config/YamlToolkitView').then((m) => ({ default: m.YamlToolkitView })));
 const DocsGuideView = lazy(() => import('../views/DocsGuideView').then((m) => ({ default: m.DocsGuideView })));
 
 import { getToolById } from '../../registry/toolsRegistry';
@@ -99,6 +103,34 @@ export const AppShell: React.FC = () => {
       if (cmdOrCtrl && e.shiftKey && e.key.toLowerCase() === 'i') {
         e.preventDefault();
         setActiveView('openapi-explorer');
+        return;
+      }
+
+      // Cmd/Ctrl + Shift + G -> Open Git Workspace
+      if (cmdOrCtrl && e.shiftKey && e.key.toLowerCase() === 'g') {
+        e.preventDefault();
+        setActiveView('git');
+        return;
+      }
+
+      // Cmd/Ctrl + Shift + L -> Open Logs
+      if (cmdOrCtrl && e.shiftKey && e.key.toLowerCase() === 'l') {
+        e.preventDefault();
+        setActiveView('logs');
+        return;
+      }
+
+      // Cmd/Ctrl + Shift + Y -> Open YAML Toolkit
+      if (cmdOrCtrl && e.shiftKey && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        setActiveView('yaml-toolkit');
+        return;
+      }
+
+      // Cmd/Ctrl + Shift + E -> Open Environment
+      if (cmdOrCtrl && e.shiftKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        setActiveView('environments');
         return;
       }
 
@@ -210,6 +242,14 @@ export const AppShell: React.FC = () => {
         return <MockServerView />;
       case 'openapi-explorer':
         return <OpenApiExplorerView />;
+      case 'git':
+        return <GitWorkspaceView />;
+      case 'ssh':
+        return <SshWorkspaceView />;
+      case 'logs':
+        return <LogViewer />;
+      case 'yaml-toolkit':
+        return <YamlToolkitView />;
       default:
         return <HomeDashboard />;
     }

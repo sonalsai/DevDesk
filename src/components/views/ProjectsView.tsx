@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useWorkspace } from '@/hooks';
 import type { Project, ProjectLink } from '../../types';
+import type { LogEntry } from '../../types/logs';
 import { generateUniqueId } from '../../utils/date';
 import {
   FolderKanban,
@@ -17,6 +18,9 @@ import {
   Send,
   Layers,
   Folder,
+  GitBranch,
+  FolderGit2,
+  ScrollText,
 } from 'lucide-react';
 import { useToast } from '@/hooks';
 import { Modal } from '../common/Modal';
@@ -35,6 +39,10 @@ export const ProjectsView: React.FC = () => {
     toggleTaskStatus,
     openRequestInTab,
     addCollection,
+    gitRepositories,
+    setActiveGitRepoId,
+    linkProjectToGitRepo,
+    logs,
   } = useWorkspace();
   const { showToast } = useToast();
 
@@ -141,6 +149,9 @@ export const ProjectsView: React.FC = () => {
     const projectSnippets = data.snippets.filter((s) => s.projectId === currentProject.id);
     const projectCollections = (data.apiCollections || []).filter((c) => c.projectId === currentProject.id);
     const projectEnvironments = (data.environments || []).filter((e) => e.projectId === currentProject.id);
+    const linkedRepo = gitRepositories.find(
+      (r) => r.projectId === currentProject.id || r.id === currentProject.gitRepositoryId
+    );
 
     return (
       <div className="workspace-page">
@@ -589,7 +600,170 @@ export const ProjectsView: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+
+        {/* Phase 4: Git Repository Integration for Project */}
+        <div className="tool-panel" style={{ marginTop: 16 }}>
+          <div className="tool-panel-header">
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <GitBranch size={14} style={{ color: '#f34f29' }} />
+              <strong>Git Repository & Version Control</strong>
+            </span>
+            {linkedRepo && (
+              <button
+                className="btn btn-primary btn-xs"
+                onClick={() => {
+                  setActiveGitRepoId(linkedRepo.id);
+                  setActiveView('git');
+                }}
+              >
+                <FolderGit2 size={12} />
+                <span>Open in Git</span>
+              </button>
+            )}
+          </div>
+
+          <div style={{ padding: 14 }}>
+            {linkedRepo ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+                <div style={{ padding: 10, background: 'var(--bg-input)', borderRadius: 'var(--radius-md)' }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Repository</div>
+                  <div style={{ fontWeight: 600, fontSize: 13 }}>{linkedRepo.name}</div>
+                  <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>
+                    {linkedRepo.path}
+                  </div>
+                </div>
+
+                <div style={{ padding: 10, background: 'var(--bg-input)', borderRadius: 'var(--radius-md)' }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Current Branch</div>
+                  <div style={{ fontWeight: 600, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <GitBranch size={13} style={{ color: 'var(--accent)' }} />
+                    <span>{linkedRepo.currentBranch}</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
+                    {linkedRepo.branches.length} branch(es) tracked
+                  </div>
+                </div>
+
+                <div style={{ padding: 10, background: 'var(--bg-input)', borderRadius: 'var(--radius-md)' }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Working Tree Status</div>
+                  <div style={{ fontWeight: 600, fontSize: 13 }}>
+                    {linkedRepo.changes.length > 0 ? (
+                      <span style={{ color: '#b45309' }}>
+                        {linkedRepo.changes.length} changed file(s)
+                      </span>
+                    ) : (
+                      <span style={{ color: 'var(--success)' }}>Clean (0 uncommitted)</span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>
+                    {linkedRepo.changes.filter((c) => c.staged).length} file(s) staged
+                  </div>
+                </div>
+
+                <div style={{ padding: 10, background: 'var(--bg-input)', borderRadius: 'var(--radius-md)' }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Latest Commit</div>
+                  {linkedRepo.commits[0] ? (
+                    <>
+                      <div style={{ fontWeight: 600, fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {linkedRepo.commits[0].subject}
+                      </div>
+                      <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--accent)' }}>
+                        {linkedRepo.commits[0].shortHash}
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>No commits yet</div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 2 }}>
+                    No Git repository linked to this project
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    Associate this project with an existing Git repository or open Git workspace.
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <select
+                    style={{ fontSize: 12, padding: '4px 8px' }}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        linkProjectToGitRepo(currentProject.id, e.target.value);
+                        showToast('Linked project to Git repository', 'success', 1500);
+                      }
+                    }}
+                    defaultValue=""
+                  >
+                    <option value="" disabled>Link existing repository...</option>
+                    {gitRepositories.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    className="btn btn-secondary btn-xs"
+                    onClick={() => {
+                      setActiveView('git');
+                    }}
+                  >
+                    Open Git Workspace
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Phase 5: Local Logs Integration for Project */}
+        <div className="tool-panel" style={{ marginTop: 16 }}>
+            <div className="tool-panel-header">
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <ScrollText size={14} style={{ color: '#10b981' }} />
+                <strong>Local Logs & Diagnostics</strong>
+              </span>
+              <button
+                className="btn btn-secondary btn-xs"
+                onClick={() => setActiveView('logs')}
+              >
+                Open Log Viewer
+              </button>
+            </div>
+            <div style={{ padding: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                  Total Logs: <strong style={{ color: 'var(--text-primary)' }}>{logs.length} entries</strong>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <span className="badge badge-subtle" style={{ color: 'var(--danger)', fontSize: 10 }}>
+                    {logs.filter((l: LogEntry) => l.level === 'ERROR' || l.level === 'FATAL').length} errors
+                  </span>
+                  <span className="badge badge-subtle" style={{ color: '#d97706', fontSize: 10 }}>
+                    {logs.filter((l: LogEntry) => l.level === 'WARN').length} warns
+                  </span>
+                </div>
+              </div>
+              <div
+                style={{
+                  background: 'var(--bg-input)',
+                  padding: '8px 10px',
+                  borderRadius: 'var(--radius-sm)',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 11,
+                  color: 'var(--text-secondary)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {logs[0] ? `[${logs[0].level.toUpperCase()}] ${logs[0].message}` : 'No logs captured yet in current session.'}
+              </div>
+            </div>
+          </div>
+        </div>
     );
   }
 
@@ -630,6 +804,7 @@ export const ProjectsView: React.FC = () => {
           const taskCount = data.tasks.filter((t) => t.projectId === proj.id).length;
           const snippetCount = data.snippets.filter((s) => s.projectId === proj.id).length;
           const apiCount = (data.apiCollections || []).filter((c) => c.projectId === proj.id).length;
+          const projRepo = gitRepositories.find((r) => r.projectId === proj.id || r.id === proj.gitRepositoryId);
 
           return (
             <div
@@ -666,6 +841,15 @@ export const ProjectsView: React.FC = () => {
                 <span>{snippetCount} snippets</span>
                 <span>•</span>
                 <span>{apiCount} APIs</span>
+                {projRepo && (
+                  <>
+                    <span>•</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: 'var(--accent)', fontWeight: 600 }}>
+                      <GitBranch size={10} />
+                      {projRepo.currentBranch}
+                    </span>
+                  </>
+                )}
                 <span>•</span>
                 <span>{proj.links.length} links</span>
               </div>

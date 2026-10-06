@@ -22,6 +22,8 @@ import type {
   WebSocketConnection,
   SseConnection,
   OpenApiDocumentRecord,
+  GitRepository,
+  GitSettings,
 } from '../types';
 import {
   loadWorkspaceData,
@@ -39,6 +41,38 @@ import {
   canGoForward,
   type NavigationState,
 } from '../services/navigation';
+import {
+  stageFile,
+  unstageFile,
+  stageAll,
+  unstageAll,
+  toggleHunkStage,
+  discardFileChanges,
+  discardAllUnstaged,
+  commitChanges,
+  validateCommit,
+  createBranch,
+  switchBranch,
+  renameBranch,
+  deleteBranch,
+  mergeBranch,
+  resolveFileConflict,
+  createStash,
+  applyStash,
+  popStash,
+  dropStash,
+  createTag,
+  deleteTag,
+  addRemote,
+  editRemote,
+  removeRemote,
+  fetchRemote,
+  pullRemote,
+  pushRemote,
+} from '../services/git';
+import { trimLogsToRetention } from '../services/logs';
+import { parseEnvFile } from '../services/config';
+import type { SSHProfile, LogEntry, EnvFileRecord } from '../types';
 import { WorkspaceContext } from './workspaceContextDef';
 
 function createDefaultTab(request?: ApiRequest): ApiTab {
@@ -1007,6 +1041,551 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }));
   }, []);
 
+  // Phase 4: Git & Version Control
+  const gitRepositories = useMemo(() => data.gitRepositories || [], [data.gitRepositories]);
+  const activeGitRepoId = data.activeGitRepoId || (gitRepositories[0]?.id ?? null);
+  const activeGitRepo = useMemo(
+    () => gitRepositories.find((r) => r.id === activeGitRepoId) || gitRepositories[0],
+    [gitRepositories, activeGitRepoId]
+  );
+
+  const gitSettings: GitSettings = useMemo(
+    () => data.gitSettings || {
+      defaultBranch: 'main',
+      defaultDiffMode: 'unified' as const,
+      confirmDestructive: true,
+      authorName: 'Developer',
+      authorEmail: 'developer@devdesk.local',
+      autoFetchIntervalMinutes: 0,
+    },
+    [data.gitSettings]
+  );
+
+  const updateGitSettings = useCallback((updates: Partial<GitSettings>) => {
+    setData((prev) => ({
+      ...prev,
+      gitSettings: {
+        ...(prev.gitSettings || {
+          defaultBranch: 'main',
+          defaultDiffMode: 'unified',
+          confirmDestructive: true,
+          authorName: 'Developer',
+          authorEmail: 'developer@devdesk.local',
+          autoFetchIntervalMinutes: 0,
+        }),
+        ...updates,
+      },
+    }));
+  }, []);
+
+  const setActiveGitRepoId = useCallback((repoId: string | null) => {
+    setData((prev) => ({ ...prev, activeGitRepoId: repoId }));
+  }, []);
+
+  const addGitRepository = useCallback((repo: GitRepository) => {
+    setData((prev) => ({
+      ...prev,
+      gitRepositories: [...(prev.gitRepositories || []), repo],
+      activeGitRepoId: repo.id,
+    }));
+  }, []);
+
+  const updateGitRepository = useCallback((id: string, updates: Partial<GitRepository>) => {
+    setData((prev) => ({
+      ...prev,
+      gitRepositories: (prev.gitRepositories || []).map((r) =>
+        r.id === id ? { ...r, ...updates, updatedAt: new Date().toISOString() } : r
+      ),
+    }));
+  }, []);
+
+  const deleteGitRepository = useCallback((id: string) => {
+    setData((prev) => {
+      const remaining = (prev.gitRepositories || []).filter((r) => r.id !== id);
+      const nextActiveId = prev.activeGitRepoId === id ? (remaining[0]?.id ?? null) : prev.activeGitRepoId;
+      return {
+        ...prev,
+        gitRepositories: remaining,
+        activeGitRepoId: nextActiveId,
+      };
+    });
+  }, []);
+
+  const stageGitFile = useCallback((repoId: string, changeId: string) => {
+    setData((prev) => {
+      const repo = (prev.gitRepositories || []).find((r) => r.id === repoId);
+      if (!repo) return prev;
+      const updated = stageFile(repo, changeId);
+      return {
+        ...prev,
+        gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? updated : r)),
+      };
+    });
+  }, []);
+
+  const unstageGitFile = useCallback((repoId: string, changeId: string) => {
+    setData((prev) => {
+      const repo = (prev.gitRepositories || []).find((r) => r.id === repoId);
+      if (!repo) return prev;
+      const updated = unstageFile(repo, changeId);
+      return {
+        ...prev,
+        gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? updated : r)),
+      };
+    });
+  }, []);
+
+  const stageAllGitFiles = useCallback((repoId: string): { sensitiveWarnings: string[] } => {
+    let warnings: string[] = [];
+    setData((prev) => {
+      const repo = (prev.gitRepositories || []).find((r) => r.id === repoId);
+      if (!repo) return prev;
+      const res = stageAll(repo);
+      warnings = res.sensitiveWarnings;
+      return {
+        ...prev,
+        gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? res.repo : r)),
+      };
+    });
+    return { sensitiveWarnings: warnings };
+  }, []);
+
+  const unstageAllGitFiles = useCallback((repoId: string) => {
+    setData((prev) => {
+      const repo = (prev.gitRepositories || []).find((r) => r.id === repoId);
+      if (!repo) return prev;
+      const updated = unstageAll(repo);
+      return {
+        ...prev,
+        gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? updated : r)),
+      };
+    });
+  }, []);
+
+  const toggleGitHunkStage = useCallback((repoId: string, changeId: string, hunkId: string, shouldStage: boolean) => {
+    setData((prev) => {
+      const repo = (prev.gitRepositories || []).find((r) => r.id === repoId);
+      if (!repo) return prev;
+      const updated = toggleHunkStage(repo, changeId, hunkId, shouldStage);
+      return {
+        ...prev,
+        gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? updated : r)),
+      };
+    });
+  }, []);
+
+  const discardGitFileChanges = useCallback((repoId: string, changeId: string) => {
+    setData((prev) => {
+      const repo = (prev.gitRepositories || []).find((r) => r.id === repoId);
+      if (!repo) return prev;
+      const updated = discardFileChanges(repo, changeId);
+      return {
+        ...prev,
+        gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? updated : r)),
+      };
+    });
+  }, []);
+
+  const discardAllGitChanges = useCallback((repoId: string) => {
+    setData((prev) => {
+      const repo = (prev.gitRepositories || []).find((r) => r.id === repoId);
+      if (!repo) return prev;
+      const updated = discardAllUnstaged(repo);
+      return {
+        ...prev,
+        gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? updated : r)),
+      };
+    });
+  }, []);
+
+  const commitGitChanges = useCallback((repoId: string, message: string, isAmend = false): { success: boolean; error?: string } => {
+    const repo = (data.gitRepositories || []).find((r) => r.id === repoId);
+    if (!repo) return { success: false, error: 'Repository not found.' };
+
+    const validation = validateCommit(repo, message, isAmend);
+    if (!validation.isValid) {
+      return { success: false, error: validation.error };
+    }
+
+    const { repo: updatedRepo } = commitChanges(
+      repo,
+      message,
+      {
+        name: gitSettings.authorName || 'Developer',
+        email: gitSettings.authorEmail || 'developer@devdesk.local',
+        date: new Date().toISOString(),
+      },
+      isAmend
+    );
+
+    setData((prev) => ({
+      ...prev,
+      gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? updatedRepo : r)),
+    }));
+
+    return { success: true };
+  }, [data.gitRepositories, gitSettings]);
+
+  const createGitBranch = useCallback((repoId: string, name: string, basedOnCommit?: string): { success: boolean; error?: string } => {
+    const repo = (data.gitRepositories || []).find((r) => r.id === repoId);
+    if (!repo) return { success: false, error: 'Repository not found.' };
+
+    const res = createBranch(repo, name, basedOnCommit);
+    if (res.error) return { success: false, error: res.error };
+
+    setData((prev) => ({
+      ...prev,
+      gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? res.repo : r)),
+    }));
+    return { success: true };
+  }, [data.gitRepositories]);
+
+  const switchGitBranch = useCallback((repoId: string, targetBranchName: string, force = false): { success: boolean; error?: string; requiresStashOrForce?: boolean } => {
+    const repo = (data.gitRepositories || []).find((r) => r.id === repoId);
+    if (!repo) return { success: false, error: 'Repository not found.' };
+
+    const res = switchBranch(repo, targetBranchName, force);
+    if (res.error) {
+      return { success: false, error: res.error, requiresStashOrForce: res.requiresStashOrForce };
+    }
+
+    setData((prev) => ({
+      ...prev,
+      gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? res.repo : r)),
+    }));
+    return { success: true };
+  }, [data.gitRepositories]);
+
+  const renameGitBranch = useCallback((repoId: string, oldName: string, newName: string): { success: boolean; error?: string } => {
+    const repo = (data.gitRepositories || []).find((r) => r.id === repoId);
+    if (!repo) return { success: false, error: 'Repository not found.' };
+
+    const res = renameBranch(repo, oldName, newName);
+    if (res.error) return { success: false, error: res.error };
+
+    setData((prev) => ({
+      ...prev,
+      gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? res.repo : r)),
+    }));
+    return { success: true };
+  }, [data.gitRepositories]);
+
+  const deleteGitBranch = useCallback((repoId: string, branchName: string): { success: boolean; error?: string } => {
+    const repo = (data.gitRepositories || []).find((r) => r.id === repoId);
+    if (!repo) return { success: false, error: 'Repository not found.' };
+
+    const res = deleteBranch(repo, branchName);
+    if (res.error) return { success: false, error: res.error };
+
+    setData((prev) => ({
+      ...prev,
+      gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? res.repo : r)),
+    }));
+    return { success: true };
+  }, [data.gitRepositories]);
+
+  const mergeGitBranch = useCallback((repoId: string, sourceBranchName: string): { success: boolean; merged: boolean; hasConflicts: boolean; summary: string } => {
+    const repo = (data.gitRepositories || []).find((r) => r.id === repoId);
+    if (!repo) return { success: false, merged: false, hasConflicts: false, summary: 'Repository not found.' };
+
+    const res = mergeBranch(repo, sourceBranchName);
+    setData((prev) => ({
+      ...prev,
+      gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? res.repo : r)),
+    }));
+    return { success: res.merged, merged: res.merged, hasConflicts: res.hasConflicts, summary: res.summary };
+  }, [data.gitRepositories]);
+
+  const resolveGitConflict = useCallback((repoId: string, filePath: string, resolvedContent?: string) => {
+    setData((prev) => {
+      const repo = (prev.gitRepositories || []).find((r) => r.id === repoId);
+      if (!repo) return prev;
+      const updated = resolveFileConflict(repo, filePath, resolvedContent);
+      return {
+        ...prev,
+        gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? updated : r)),
+      };
+    });
+  }, []);
+
+  const createGitStash = useCallback((repoId: string, message?: string) => {
+    setData((prev) => {
+      const repo = (prev.gitRepositories || []).find((r) => r.id === repoId);
+      if (!repo) return prev;
+      const res = createStash(repo, message);
+      return {
+        ...prev,
+        gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? res.repo : r)),
+      };
+    });
+  }, []);
+
+  const applyGitStash = useCallback((repoId: string, stashId: string): { success: boolean; error?: string } => {
+    const repo = (data.gitRepositories || []).find((r) => r.id === repoId);
+    if (!repo) return { success: false, error: 'Repository not found.' };
+
+    const res = applyStash(repo, stashId);
+    if (res.error) return { success: false, error: res.error };
+
+    setData((prev) => ({
+      ...prev,
+      gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? res.repo : r)),
+    }));
+    return { success: true };
+  }, [data.gitRepositories]);
+
+  const popGitStash = useCallback((repoId: string, stashId: string): { success: boolean; error?: string } => {
+    const repo = (data.gitRepositories || []).find((r) => r.id === repoId);
+    if (!repo) return { success: false, error: 'Repository not found.' };
+
+    const res = popStash(repo, stashId);
+    if (res.error) return { success: false, error: res.error };
+
+    setData((prev) => ({
+      ...prev,
+      gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? res.repo : r)),
+    }));
+    return { success: true };
+  }, [data.gitRepositories]);
+
+  const dropGitStash = useCallback((repoId: string, stashId: string) => {
+    setData((prev) => {
+      const repo = (prev.gitRepositories || []).find((r) => r.id === repoId);
+      if (!repo) return prev;
+      const updated = dropStash(repo, stashId);
+      return {
+        ...prev,
+        gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? updated : r)),
+      };
+    });
+  }, []);
+
+  const createGitTag = useCallback((repoId: string, name: string, commitHash: string, message?: string, tagger?: string): { success: boolean; error?: string } => {
+    const repo = (data.gitRepositories || []).find((r) => r.id === repoId);
+    if (!repo) return { success: false, error: 'Repository not found.' };
+
+    const res = createTag(repo, name, commitHash, message, tagger);
+    if (res.error) return { success: false, error: res.error };
+
+    setData((prev) => ({
+      ...prev,
+      gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? res.repo : r)),
+    }));
+    return { success: true };
+  }, [data.gitRepositories]);
+
+  const deleteGitTag = useCallback((repoId: string, tagName: string) => {
+    setData((prev) => {
+      const repo = (prev.gitRepositories || []).find((r) => r.id === repoId);
+      if (!repo) return prev;
+      const updated = deleteTag(repo, tagName);
+      return {
+        ...prev,
+        gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? updated : r)),
+      };
+    });
+  }, []);
+
+  const addGitRemote = useCallback((repoId: string, name: string, fetchUrl: string, pushUrl?: string): { success: boolean; error?: string } => {
+    const repo = (data.gitRepositories || []).find((r) => r.id === repoId);
+    if (!repo) return { success: false, error: 'Repository not found.' };
+
+    const res = addRemote(repo, name, fetchUrl, pushUrl);
+    if (res.error) return { success: false, error: res.error };
+
+    setData((prev) => ({
+      ...prev,
+      gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? res.repo : r)),
+    }));
+    return { success: true };
+  }, [data.gitRepositories]);
+
+  const editGitRemote = useCallback((repoId: string, oldName: string, newName: string, fetchUrl: string, pushUrl?: string): { success: boolean; error?: string } => {
+    const repo = (data.gitRepositories || []).find((r) => r.id === repoId);
+    if (!repo) return { success: false, error: 'Repository not found.' };
+
+    const res = editRemote(repo, oldName, newName, fetchUrl, pushUrl);
+    if (res.error) return { success: false, error: res.error };
+
+    setData((prev) => ({
+      ...prev,
+      gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? res.repo : r)),
+    }));
+    return { success: true };
+  }, [data.gitRepositories]);
+
+  const removeGitRemote = useCallback((repoId: string, name: string) => {
+    setData((prev) => {
+      const repo = (prev.gitRepositories || []).find((r) => r.id === repoId);
+      if (!repo) return prev;
+      const updated = removeRemote(repo, name);
+      return {
+        ...prev,
+        gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? updated : r)),
+      };
+    });
+  }, []);
+
+  const fetchGitRemote = useCallback((repoId: string, remoteName = 'origin'): string => {
+    const repo = (data.gitRepositories || []).find((r) => r.id === repoId);
+    if (!repo) return 'Repository not found';
+
+    const res = fetchRemote(repo, remoteName);
+    setData((prev) => ({
+      ...prev,
+      gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? res.repo : r)),
+    }));
+    return res.summary;
+  }, [data.gitRepositories]);
+
+  const pullGitRemote = useCallback((repoId: string, remoteName = 'origin'): { success: boolean; summary: string; error?: string } => {
+    const repo = (data.gitRepositories || []).find((r) => r.id === repoId);
+    if (!repo) return { success: false, summary: '', error: 'Repository not found.' };
+
+    const res = pullRemote(repo, remoteName);
+    if (res.error) return { success: false, summary: '', error: res.error };
+
+    setData((prev) => ({
+      ...prev,
+      gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? res.repo : r)),
+    }));
+    return { success: true, summary: res.summary };
+  }, [data.gitRepositories]);
+
+  const pushGitRemote = useCallback((repoId: string, remoteName = 'origin', authProvided = true): { success: boolean; summary: string; error?: string } => {
+    const repo = (data.gitRepositories || []).find((r) => r.id === repoId);
+    if (!repo) return { success: false, summary: '', error: 'Repository not found.' };
+
+    const res = pushRemote(repo, remoteName, authProvided);
+    if (res.error) return { success: false, summary: '', error: res.error };
+
+    setData((prev) => ({
+      ...prev,
+      gitRepositories: (prev.gitRepositories || []).map((r) => (r.id === repoId ? res.repo : r)),
+    }));
+    return { success: true, summary: res.summary };
+  }, [data.gitRepositories]);
+
+  const linkProjectToGitRepo = useCallback((projectId: string, repoId: string | null) => {
+    setData((prev) => {
+      const repo = (prev.gitRepositories || []).find((r) => r.id === repoId);
+      return {
+        ...prev,
+        projects: prev.projects.map((p) => {
+          if (p.id === projectId) {
+            return {
+              ...p,
+              gitRepositoryId: repoId || undefined,
+              gitBranch: repo ? repo.currentBranch : undefined,
+              gitRepoUrl: repo?.remotes[0]?.fetchUrl || undefined,
+              updatedAt: new Date().toISOString(),
+            };
+          }
+          return p;
+        }),
+      };
+    });
+  }, []);
+
+  // Phase 5: Essential Developer Integrations (SSH, Logs, EnvFiles)
+  const sshProfiles = useMemo(() => data.sshProfiles || [], [data.sshProfiles]);
+  const logEntries = useMemo(() => data.logEntries || [], [data.logEntries]);
+  const envFiles = useMemo(() => data.envFiles || [], [data.envFiles]);
+
+  const addSSHProfile = useCallback((profile: Omit<SSHProfile, 'id' | 'createdAt'>): SSHProfile => {
+    const newProfile: SSHProfile = {
+      ...profile,
+      id: `ssh-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      createdAt: new Date().toISOString(),
+    };
+    setData((prev) => ({
+      ...prev,
+      sshProfiles: [...(prev.sshProfiles || []), newProfile],
+    }));
+    return newProfile;
+  }, []);
+
+  const updateSSHProfile = useCallback((id: string, updates: Partial<SSHProfile>) => {
+    setData((prev) => ({
+      ...prev,
+      sshProfiles: (prev.sshProfiles || []).map((p) => (p.id === id ? { ...p, ...updates } : p)),
+    }));
+  }, []);
+
+  const deleteSSHProfile = useCallback((id: string) => {
+    setData((prev) => ({
+      ...prev,
+      sshProfiles: (prev.sshProfiles || []).filter((p) => p.id !== id),
+    }));
+  }, []);
+
+  const duplicateSSHProfile = useCallback((id: string): SSHProfile | null => {
+    const existing = (data.sshProfiles || []).find((p) => p.id === id);
+    if (!existing) return null;
+    const duplicated: SSHProfile = {
+      ...existing,
+      id: `ssh-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      name: `${existing.name} (Copy)`,
+      createdAt: new Date().toISOString(),
+    };
+    setData((prev) => ({
+      ...prev,
+      sshProfiles: [...(prev.sshProfiles || []), duplicated],
+    }));
+    return duplicated;
+  }, [data.sshProfiles]);
+
+  const addLogEntry = useCallback((entry: Omit<LogEntry, 'id'>) => {
+    const newEntry: LogEntry = {
+      ...entry,
+      id: `log-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    };
+    setData((prev) => ({
+      ...prev,
+      logEntries: trimLogsToRetention([...(prev.logEntries || []), newEntry], 1000),
+    }));
+  }, []);
+
+  const clearLogs = useCallback(() => {
+    setData((prev) => ({
+      ...prev,
+      logEntries: [],
+    }));
+  }, []);
+
+  const saveEnvFile = useCallback((name: string, content: string) => {
+    const parsed = parseEnvFile(content);
+    setData((prev) => {
+      const existing = (prev.envFiles || []).find((f) => f.name.toLowerCase() === name.toLowerCase());
+      if (existing) {
+        return {
+          ...prev,
+          envFiles: (prev.envFiles || []).map((f) =>
+            f.id === existing.id ? { ...f, content, variables: parsed, updatedAt: new Date().toISOString() } : f
+          ),
+        };
+      }
+      const newFile: EnvFileRecord = {
+        id: `env-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        name,
+        content,
+        variables: parsed,
+        updatedAt: new Date().toISOString(),
+      };
+      return {
+        ...prev,
+        envFiles: [...(prev.envFiles || []), newFile],
+      };
+    });
+  }, []);
+
+  const deleteEnvFile = useCallback((id: string) => {
+    setData((prev) => ({
+      ...prev,
+      envFiles: (prev.envFiles || []).filter((f) => f.id !== id),
+    }));
+  }, []);
+
   return (
     <WorkspaceContext.Provider
       value={{
@@ -1115,6 +1694,60 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         openApiDocuments,
         addOpenApiDocument,
         deleteOpenApiDocument,
+
+        // Phase 4: Git & Version Control
+        gitRepositories,
+        activeGitRepoId,
+        activeGitRepo,
+        gitSettings,
+        updateGitSettings,
+        setActiveGitRepoId,
+        addGitRepository,
+        updateGitRepository,
+        deleteGitRepository,
+        stageGitFile,
+        unstageGitFile,
+        stageAllGitFiles,
+        unstageAllGitFiles,
+        toggleGitHunkStage,
+        discardGitFileChanges,
+        discardAllGitChanges,
+        commitGitChanges,
+        createGitBranch,
+        switchGitBranch,
+        renameGitBranch,
+        deleteGitBranch,
+        mergeGitBranch,
+        resolveGitConflict,
+        createGitStash,
+        applyGitStash,
+        popGitStash,
+        dropGitStash,
+        createGitTag,
+        deleteGitTag,
+        addGitRemote,
+        editGitRemote,
+        removeGitRemote,
+        fetchGitRemote,
+        pullGitRemote,
+        pushGitRemote,
+        linkProjectToGitRepo,
+
+        // Phase 5: Essential Developer Integrations (SSH, Logs, EnvFiles)
+        sshProfiles,
+        addSSHProfile,
+        updateSSHProfile,
+        deleteSSHProfile,
+        duplicateSSHProfile,
+
+        logs: logEntries,
+        logEntries,
+        addLogEntry,
+        clearLogs,
+
+        envFiles,
+        saveEnvFile,
+        deleteEnvFile,
       }}
     >
       {children}

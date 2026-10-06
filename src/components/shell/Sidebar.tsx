@@ -20,6 +20,10 @@ import {
   Activity,
   Server,
   BookOpen,
+  GitBranch,
+  Terminal,
+  ScrollText,
+  FileCode,
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
@@ -29,12 +33,14 @@ export const Sidebar: React.FC = () => {
     isSidebarCollapsed,
     setIsSidebarCollapsed,
     data,
+    activeGitRepo,
   } = useWorkspace();
 
   const pendingTasksCount = data.tasks.filter((t) => t.status !== 'done').length;
   const snippetsCount = data.snippets.length;
   const favoritesCount = data.favorites.length;
   const projectsCount = data.projects.length;
+  const gitChangesCount = activeGitRepo?.changes.length || 0;
 
   return (
     <aside className={`app-sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
@@ -233,6 +239,42 @@ export const Sidebar: React.FC = () => {
               <span className="nav-item-label">HTTP Inspector</span>
             </div>
           </button>
+
+          <button
+            className={`sidebar-nav-item ${activeView === 'git' ? 'active' : ''}`}
+            onClick={() => setActiveView('git')}
+            title="Git & Version Control"
+          >
+            <div className="nav-item-left">
+              <GitBranch size={15} style={{ color: '#f34f29' }} />
+              <span className="nav-item-label">Git</span>
+            </div>
+            {gitChangesCount > 0 && (
+              <span className="nav-item-badge">{gitChangesCount}</span>
+            )}
+          </button>
+
+          <button
+            className={`sidebar-nav-item ${activeView === 'ssh' ? 'active' : ''}`}
+            onClick={() => setActiveView('ssh')}
+            title="SSH Essentials & Terminal"
+          >
+            <div className="nav-item-left">
+              <Terminal size={15} style={{ color: '#38bdf8' }} />
+              <span className="nav-item-label">SSH</span>
+            </div>
+          </button>
+
+          <button
+            className={`sidebar-nav-item ${activeView === 'logs' ? 'active' : ''}`}
+            onClick={() => setActiveView('logs')}
+            title="Local Log Viewer"
+          >
+            <div className="nav-item-left">
+              <ScrollText size={15} style={{ color: '#a78bfa' }} />
+              <span className="nav-item-label">Logs</span>
+            </div>
+          </button>
         </div>
         <div className="sidebar-section">
           <div className="sidebar-section-title">Tools</div>
@@ -247,6 +289,17 @@ export const Sidebar: React.FC = () => {
               <span className="nav-item-label">All Tools</span>
             </div>
             <span className="nav-item-badge">{TOOLS_REGISTRY.length}</span>
+          </button>
+
+          <button
+            className={`sidebar-nav-item ${activeView === 'yaml-toolkit' ? 'active' : ''}`}
+            onClick={() => setActiveView('yaml-toolkit')}
+            title="YAML & Config Toolkit"
+          >
+            <div className="nav-item-left">
+              <FileCode size={16} style={{ color: '#f59e0b' }} />
+              <span className="nav-item-label">YAML Toolkit</span>
+            </div>
           </button>
 
           <button
