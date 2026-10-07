@@ -19,6 +19,9 @@ import {
   ExternalLink,
   Cpu,
   Home,
+  Globe,
+  ShieldCheck,
+  Zap,
 } from 'lucide-react';
 import { useWorkspace } from '@/hooks/useWorkspace';
 import { TOOLS_REGISTRY } from '@/registry/toolsRegistry';
@@ -33,7 +36,8 @@ type GuideTab =
   | 'openapi'
   | 'testing'
   | 'utilities'
-  | 'shortcuts';
+  | 'shortcuts'
+  | 'global-standards';
 
 export const DocsGuideView: React.FC = () => {
   const { setActiveView } = useWorkspace();
@@ -198,6 +202,7 @@ export const DocsGuideView: React.FC = () => {
           { id: 'testing', label: '8. Assertions & Testing', icon: CheckCircle2 },
           { id: 'utilities', label: '9. 15 Daily Tools', icon: Wrench },
           { id: 'shortcuts', label: '10. Keyboard Shortcuts', icon: Keyboard },
+          { id: 'global-standards', label: '11. Global Standards & Interop', icon: Globe },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -1377,6 +1382,95 @@ export const DocsGuideView: React.FC = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 11: GLOBAL STANDARDS & INTEROPERABILITY */}
+      {activeTab === 'global-standards' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+          <div>
+            <h2 style={{ fontSize: '20px', fontWeight: 700, margin: '0 0 6px 0', color: 'var(--text-primary)' }}>
+              Enterprise Global Standards & Industry Interoperability
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+              DevDesk implements world-class enterprise standards for developer workflows: native 7-language internationalization, lossless Postman v2.1 and HAR 1.2 interop, automated batch testing with JUnit XML, IndexedDB storage resilience, and in-browser Web Vitals telemetry.
+            </p>
+          </div>
+
+          {/* Feature Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
+            {/* i18n Card */}
+            <div style={{ background: 'var(--bg-card)', borderRadius: '12px', padding: '20px', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
+                  <Globe size={18} />
+                </div>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>Native 7-Language i18n</h3>
+              </div>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+                Instant language switching with zero external dependencies. Supports <strong>English</strong>, <strong>Español</strong>, <strong>日本語</strong>, <strong>Deutsch</strong>, <strong>Français</strong>, <strong>简体中文</strong>, and <strong>हिन्दी</strong>.
+              </p>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                • Typed formatters for dates, relative time, bytes, numbers<br />
+                • Automated document root <code>&lt;html lang&gt;</code> synchronization<br />
+                • Deterministic English fallback prevents broken labels
+              </div>
+            </div>
+
+            {/* Interoperability Card */}
+            <div style={{ background: 'var(--bg-card)', borderRadius: '12px', padding: '20px', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
+                  <Layers size={18} />
+                </div>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>Postman v2.1 & HAR 1.2 Interop</h3>
+              </div>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+                Lossless two-way interoperability with standard tools. Import and export Postman collections with preserved variables, auth, and request payloads, or ingest Chrome/Firefox HAR 1.2 network recordings.
+              </p>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                • Built-in dynamic macro resolution (<code>{`{{$guid}}`}</code>, <code>{`{{$timestamp}}`}</code>)<br />
+                • Generate Postman environment files from active environments<br />
+                • Export HAR archives for security audits and bug reports
+              </div>
+            </div>
+
+            {/* Batch Runner Card */}
+            <div style={{ background: 'var(--bg-card)', borderRadius: '12px', padding: '20px', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
+                  <Zap size={18} />
+                </div>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>Collection Runner & JUnit XML</h3>
+              </div>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+                Execute entire collections sequentially with live progress bars, statistical latency percentiles (min, max, avg, P95), and automated variable chaining across steps.
+              </p>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                • 1-click <strong>JUnit XML</strong> export for GitHub Actions / GitLab CI<br />
+                • Configurable inter-request delay to simulate realistic traffic<br />
+                • Instant assertion evaluation across each batch request
+              </div>
+            </div>
+
+            {/* Storage Resilience Card */}
+            <div style={{ background: 'var(--bg-card)', borderRadius: '12px', padding: '20px', border: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ padding: '8px', borderRadius: '8px', background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6' }}>
+                  <ShieldCheck size={18} />
+                </div>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>Hybrid Storage & Quota Sentinel</h3>
+              </div>
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+                High-capacity IndexedDB fallback engine (<code>DevDeskEnterpriseDB</code> v1) automatically safeguards against browser localStorage quota limits.
+              </p>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                • Real-time storage meter via <code>navigator.storage.estimate()</code><br />
+                • Automated LRU history pruning protects collections and configs<br />
+                • Cryptographic SHA-256 signatures verify backup export integrity
+              </div>
+            </div>
           </div>
         </div>
       )}

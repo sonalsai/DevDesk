@@ -1,6 +1,6 @@
 # DevDesk API Testing & Assertions Guide
 
-> **Declarative, synchronous, zero-`eval` test runner and request chaining engine.**
+> **Declarative, synchronous, zero-`eval` test runner, automated batch execution, and request chaining engine.**
 
 ---
 
@@ -11,7 +11,7 @@ Traditional API clients often rely on JavaScript code sandboxes (e.g. `pm.test(.
 - Performance overhead and memory leaks.
 - Fragile scripts across workspace sharing.
 
-DevDesk utilizes a **pure declarative assertion model** evaluated by an internal recursive AST interpreter (`src/services/assertionRunner.ts`). Assertions execute deterministically with sub-millisecond execution times and zero security risks.
+DevDesk utilizes a **pure declarative assertion model** evaluated by an internal recursive AST interpreter (`src/services/api/assertionRunner.ts`). Assertions execute deterministically with sub-millisecond execution times and zero security risks.
 
 ---
 
@@ -67,9 +67,22 @@ Request chaining allows you to extract dynamic values from a response and immedi
 
 ---
 
+## 🚀 Automated Batch Collection Runner & CI/CD Reports
+
+DevDesk includes a built-in batch test runner (`src/services/api/collectionRunner.ts`) accessible directly from Collections Manager:
+
+1. **Batch Execution**: Runs all requests in a collection in sequential order.
+2. **Variable Chaining**: Applies extractions dynamically so downstream requests in the batch receive extracted tokens from earlier requests.
+3. **Statistical Metrics**: Real-time pass/fail rates, minimum latency, maximum latency, average latency, and **P95 Latency**.
+4. **CI/CD Integration**:
+   - **JUnit XML Report**: 1-click export of `junit.xml` conforming to standard CI/CD test reporting formats (GitHub Actions, GitLab CI, Jenkins).
+   - **JSON Summary**: Structured JSON test run results for archival or dashboard ingestion.
+
+---
+
 ## 🧪 Testing in CI or Unit Tests
 
-The test runner engine is thoroughly verified with unit tests in `tests/assertions.test.ts`. You can run the entire assertion test suite locally with:
+The test runner engine is thoroughly verified with unit tests in `tests/assertions.test.ts` and `tests/interop.test.ts`. You can run the entire assertion test suite locally with:
 
 ```bash
 npm run test tests/assertions.test.ts

@@ -1,3 +1,5 @@
+import type { SupportedLocale } from '../services/i18n/translations';
+
 export type ThemeMode = 'dark' | 'light' | 'system';
 
 export interface UserSettings {
@@ -9,6 +11,7 @@ export interface UserSettings {
   autoSave: boolean;
   confirmDestructive: boolean;
   trackHistory: boolean;
+  locale?: SupportedLocale;
 }
 
 export type TaskStatus = 'todo' | 'in_progress' | 'done';

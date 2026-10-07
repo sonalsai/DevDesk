@@ -17,6 +17,8 @@ import { createDemoRepository } from './git';
 import { INITIAL_DEMO_SSH_PROFILES } from './ssh/sshService';
 import { INITIAL_DEMO_LOGS } from './logs/logService';
 import { INITIAL_DEMO_ENV_FILES } from './config/envFileService';
+import { saveSnapshotToDb } from './storage/indexedDbStorage';
+import { pruneApiHistoryIfExceeded } from './storage/storageQuotaService';
 
 const STORAGE_KEY = 'devdesk_workspace_v3';
 
@@ -29,6 +31,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   autoSave: true,
   confirmDestructive: true,
   trackHistory: true,
+  locale: 'en',
 };
 
 const EMPTY_SCRATCHPAD: ScratchpadData = {
@@ -525,7 +528,14 @@ export function saveWorkspaceData(data: WorkspaceData): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (err) {
-    console.error('Error saving DevDesk workspace data to localStorage:', err);
+    console.warn('LocalStorage quota limit reached, attempting automatic LRU history pruning...', err);
+    try {
+      const pruned = pruneApiHistoryIfExceeded(data, 25);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(pruned));
+    } catch {
+      saveSnapshotToDb('Emergency Quota Recovery Checkpoint', data).catch(() => {});
+      console.error('Critical storage quota exceeded: saved emergency snapshot to IndexedDB.');
+    }
   }
 }
 
@@ -564,7 +574,12 @@ export function downloadWorkspaceBackup(data: WorkspaceData, includeSecrets = fa
 }
 
 export function parseImportedWorkspace(jsonStr: string): WorkspaceData {
-  const parsed = JSON.parse(jsonStr);
+  let parsed = JSON.parse(jsonStr);
+  // Support verified export envelope format
+  if (parsed && parsed.format === 'devdesk-workspace' && parsed.payload) {
+    parsed = parsed.payload;
+  }
+
   if (!parsed || typeof parsed !== 'object') {
     throw new Error('Invalid JSON format for DevDesk workspace.');
   }

@@ -3,7 +3,7 @@
 > **Fast, focused, private, and local-first developer cockpit.**  
 > Built for software engineers who value speed, privacy, and aesthetic visual excellence.
 
-[![Tests](https://img.shields.io/badge/tests-57%20passing-brightgreen.svg)](#)
+[![Tests](https://img.shields.io/badge/tests-123%20passing-brightgreen.svg)](#)
 [![Lint](https://img.shields.io/badge/lint-0%20warnings-brightgreen.svg)](#)
 [![Bundle](https://img.shields.io/badge/entry%20bundle-103%20kB%20(25%20kB%20gz)-blue.svg)](#)
 [![TypeScript](https://img.shields.io/badge/typescript-strict%205.x-blue.svg)](#)
@@ -17,31 +17,35 @@
 **DevDesk** transforms your browser into a complete developer desktop environment. Instead of context-switching between 10+ open browser tabs, desktop HTTP clients, mock utilities, and CLI tools, DevDesk unifies everything into one seamless, privacy-first workspace:
 
 ```text
-API Specification (OpenAPI / Swagger)
+API Specification (OpenAPI / Swagger / Postman v2.1 / HAR 1.2)
        ↓
 Import / Explore Schemas & Docs
        ↓
 Organized Collections & Environments
        ↓
-Execute Protocols (REST / GraphQL / WebSocket / SSE)
+Execute Protocols (REST / GraphQL / WebSocket / SSE / Batch Runner)
        ↓
 Local Mock Server Simulation (Zero Backend)
        ↓
-Declarative Assertions & Automated Testing
+Declarative Assertions & Automated Testing (JUnit XML CI/CD)
        ↓
 Request Chaining & Variable Extraction
        ↓
-Inspect Results & Debug
+Inspect Results, Telemetry & Web Vitals
 ```
 
 - **100% Local-First & Private**: Everything runs in your browser. Zero cloud telemetry, zero remote tracking, and zero credentials sent to third parties.
+- **Global Multi-Language (i18n)**: 7 global languages (English, Spanish, Japanese, German, French, Simplified Chinese, Hindi) with native formatting.
+- **Postman v2.1 & HAR 1.2 Interoperability**: Seamless two-way import and export of Postman collections, HTTP Archive network captures, and dynamic system variables (`{{$guid}}`, `{{$timestamp}}`).
+- **Automated Collection Runner**: Sequential batch test execution with dynamic request chaining and instant **JUnit XML** export for CI/CD pipelines.
+- **Hybrid Storage Resilience & Quota Sentinel**: IndexedDB emergency checkpoints, automatic LRU history pruning, and cryptographic SHA-256 backup integrity checks.
 - **Full Real-Time & API Suite**: REST, GraphQL (with live Introspection & Query Builder), WebSocket, and Server-Sent Events (SSE).
 - **In-Browser Mock Server**: Simulate backend endpoints with parameterized paths (`/users/:id`), multi-scenarios (`200 OK`, `400 Bad Request`, `404 Not Found`), and configurable latency without needing a live backend.
 - **OpenAPI 3.0 & 3.1 Importer**: Universal JSON/YAML parser that generates collections, maps servers to environments, and provides browsable API documentation.
 - **Declarative Testing Engine**: Pure recursive JSONPath assertions (status, headers, latency, response bodies) executed synchronously with **zero `eval()`**.
 - **15 Daily Developer Utilities**: Built-in formatters, JWT decoder, regex tester, UUID/hash generators, cron helper, diff checker, and converters.
 - **Keyboard-First Experience**: Global command palette (`⌘K`), quick-action shortcuts (`⌘↵`, `⌘⇧I`, `⌥←`), scratchpad shortcut (`S`), and task creation (`N`).
-- **Lean Production Footprint**: 103 kB uncompressed entry chunk (25 kB gzipped) using manual vendor code-splitting and dynamic `React.lazy` imports.
+- **PWA & Accessibility (WCAG AA)**: Installable Progressive Web App with offline indicator, screen reader skip-links, and keyboard navigation.
 
 ---
 
@@ -52,6 +56,7 @@ Explore the in-depth technical guides and specifications:
 | Guide | Description |
 | :--- | :--- |
 | [**Architecture & Engineering**](file:///Users/sonal-aot/Desktop/DevDesk/docs/ARCHITECTURE.md) | System design, runtime model, zero-`eval` security sandbox, v1–v5 storage migrations, and code-splitting |
+| [**Global Standards & Interoperability**](file:///Users/sonal-aot/Desktop/DevDesk/docs/GLOBAL_STANDARDS_GUIDE.md) | 7-locale i18n engine, Postman v2.1 & HAR 1.2 interop, collection batch runner, JUnit XML, and IndexedDB sentinel |
 | [**API Testing & Assertions**](file:///Users/sonal-aot/Desktop/DevDesk/docs/API_TESTING_GUIDE.md) | Declarative assertion engine, all 8 assertion types, recursive JSONPath resolution, and request chaining |
 | [**Local Mock Server**](file:///Users/sonal-aot/Desktop/DevDesk/docs/MOCK_SERVER_GUIDE.md) | Browser-based mock server, `:param` route matching, multi-scenario responses, latency simulation, and audit logs |
 | [**OpenAPI & Swagger 3.0 / 3.1**](file:///Users/sonal-aot/Desktop/DevDesk/docs/OPENAPI_GUIDE.md) | Universal JSON/YAML parser, automatic collection generator, server-to-environment mapping, and interactive docs |
@@ -137,57 +142,59 @@ Explore the in-depth technical guides and specifications:
 ```text
 docs/
 ├── ARCHITECTURE.md        # Technical architecture, security model, and v1-v5 migrations
+├── GLOBAL_STANDARDS_GUIDE.md # 7-locale i18n, Postman & HAR interop, batch runner, JUnit XML
 ├── API_TESTING_GUIDE.md   # Zero-eval declarative assertions, JSONPath, and request chaining
 ├── MOCK_SERVER_GUIDE.md   # Local mock server, parameterized routes, and multi-scenarios
 ├── OPENAPI_GUIDE.md       # OpenAPI 3.0 & 3.1 parser, collections generator, and docs explorer
-├── REALTIME_PROTOCOLS.md  # WebSocket and SSE frame streaming and 500-message buffer capping
+├── REALTIME_PROTOCOLS.md  # WebSocket and SSE frame streaming and 250-message buffer capping
 └── DEVELOPER_GUIDE.md     # Contributor guide, quality gates, and tool creation
 src/
 ├── components/
 │   ├── common/           # Reusable UI primitives (ErrorBoundary, LoadingFallback, Modal, CodeEditor)
 │   ├── shell/            # Application layout (AppShell, TopBar, Sidebar, CommandPalette)
 │   ├── tools/            # 15 Isolated, lazy-loaded developer tools
-│   └── views/            # Main workspace view containers
-│       ├── DocsGuideView.tsx  # Master interactive documentation & tour
-│       ├── HomeDashboard.tsx  # Central overview dashboard
-│       └── api/               # API development suite
-│           ├── ApiClientView.tsx       # REST client with Tests & Chaining tabs
-│           ├── GraphqlView.tsx         # GraphQL Explorer & Schema Introspection
-│           ├── WebSocketView.tsx       # WebSocket real-time frame workbench
-│           ├── SseView.tsx             # Server-Sent Events client
-│           ├── MockServerView.tsx      # In-browser Local Mock Server
-│           ├── OpenApiExplorerView.tsx # OpenAPI interactive documentation explorer
-│           ├── OpenApiImportModal.tsx  # OpenAPI JSON/YAML validation & importer
-│           ├── CollectionsManagerView.tsx
-│           ├── EnvironmentsView.tsx
-│           ├── HttpInspectorView.tsx
-│           └── WebhookInspectorView.tsx
-├── context/              # Context definitions & provider components
-├── hooks/                # Custom hooks (useToast, useWorkspace) with barrel export
+│   └── views/            # Modular Domain View Components
+│       ├── workspace/    # HomeDashboard, Tasks, Scratchpad, Projects, Snippets, Tools, Recent
+│       ├── modals/       # PrivacyModal, ShortcutsModal
+│       ├── api/          # API workbench (Client, GraphQL, WS, SSE, Mock, OpenAPI, Batch Runner)
+│       ├── git/          # Local Git Workspace, DiffViewer, ConflictEditor
+│       ├── ssh/          # SSH Terminal Profiles & Workspace
+│       ├── config/       # YAML Toolkit & .env files
+│       ├── logs/         # Log Viewer & search filters
+│       ├── SettingsView.tsx # General settings & 7-locale language switcher
+│       ├── DocsGuideView.tsx# Master interactive documentation & tour
+│       └── index.ts      # Master views barrel
+├── context/              # WorkspaceContext, I18nContext providers
+├── hooks/                # Custom hooks (useWorkspace, useTranslation, useToast)
 ├── registry/             # Tool definitions with dynamic lazy loading
-├── services/             # Pure business logic and domain services
-│   ├── assertionRunner.ts      # Zero-eval recursive JSONPath assertion engine
-│   ├── mockServer.ts           # In-browser route matcher and latency simulator
-│   ├── openApiParser.ts        # OpenAPI 3.0/3.1 JSON/YAML parser & collection generator
-│   ├── graphqlExecutor.ts      # Introspection query runner & interactive query builder
-│   ├── webSocketManager.ts     # Native browser WebSocket manager with buffer capping
-│   ├── sseManager.ts           # EventSource stream manager with named event support
-│   ├── apiExecutor.ts          # Fetch engine, header/url resolution, history sanitizer
-│   ├── codeGenerator.ts        # Multi-language snippet generator
-│   ├── curlParser.ts           # cURL CLI parser and reverse generator
-│   ├── environmentService.ts   # Variable interpolation and diffing
-│   ├── navigation.ts           # Immutable navigation history stack
-│   └── storage.ts              # LocalStorage persistence, migrations (v1-v5), backup/restore
+├── services/             # Modular Domain Business Logic
+│   ├── api/              # Execution, assertions, batch runner, mock server, OpenAPI, WS, SSE
+│   ├── git/              # Git engine, branch validation, diff calculation, conflict editor
+│   ├── ssh/              # SSH connection management
+│   ├── config/           # YAML formatting/conversion and .env file handling
+│   ├── logs/             # Log parser and filtering
+│   ├── storage/          # IndexedDB fallback engine, quota sentinel, LRU history pruner
+│   ├── i18n/             # 7-locale translation dictionary and native formatters
+│   ├── interop/          # Lossless Postman v2.1 & HAR 1.2 importers/exporters
+│   ├── telemetry/        # Network status sentinel and web vitals monitor
+│   ├── storage.ts        # LocalStorage persistence, migrations (v1-v5), backup/restore
+│   ├── navigation.ts     # Immutable navigation history stack
+│   └── index.ts          # Master services barrel
 ├── types/                # Strict TypeScript interfaces and schemas
 └── utils/                # Pure formatting and date/ID utilities
 tests/
 ├── api.test.ts           # API Client, variable interpolation, cURL, migrations
 ├── assertions.test.ts    # All 8 assertion types, recursive JSONPath, request chaining
+├── git.test.ts           # Git branch management, staging, commits, diffs
 ├── graphql.test.ts       # GraphQL query builder and introspection schema tests
+├── i18n.test.ts          # 7-language localization, formatters, and HTML sync
+├── integrations.test.ts  # Workspace integration test flows
+├── interop.test.ts       # Postman v2.1 & HAR 1.2 import/export and macros
 ├── mockServer.test.ts    # Local mock server route matching, latency, request logs
 ├── navigation.test.ts    # Navigation history stack and view transitions
 ├── openApi.test.ts       # OpenAPI 3.0/3.1 JSON & YAML parsing, collection generation
-└── realtime.test.ts      # WebSocket and SSE protocol validation, subscriptions, lifecycle
+├── realtime.test.ts      # WebSocket and SSE protocol validation, subscriptions, lifecycle
+└── storageResilience.test.ts # IndexedDB fallback, storage quota, SHA-256 integrity
 ```
 
 ---

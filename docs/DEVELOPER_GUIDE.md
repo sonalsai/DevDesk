@@ -27,6 +27,39 @@ The application will be live at `http://localhost:5173`.
 
 ---
 
+## 🏛 Codebase Modular Domain Architecture
+
+DevDesk organizes business logic and user interfaces into domain modules:
+
+```text
+src/
+├── services/
+│   ├── api/         # HTTP execution, assertions, OpenAPI, WebSocket, SSE, runner
+│   ├── git/         # Git engine, diffs, conflict resolution, security
+│   ├── ssh/         # SSH connection profiles and session manager
+│   ├── config/      # .env file manager, YAML tokenizer and converter
+│   ├── logs/        # Log parser, severity filters, search
+│   ├── storage/     # IndexedDB fallback, storage quota sentinel, LRU pruning
+│   ├── i18n/        # 7-locale translation engine and native formatters
+│   ├── interop/     # Postman v2.1 & HAR 1.2 converters
+│   ├── telemetry/   # Network status sentinel and web vitals monitor
+│   └── index.ts     # Master services barrel
+└── components/
+    └── views/
+        ├── workspace/ # Home, Scratchpad, Tasks, Projects, Snippets, Tools
+        ├── modals/    # PrivacyModal, ShortcutsModal
+        ├── api/       # API testing suite views
+        ├── git/       # Git workspace and diff views
+        ├── ssh/       # SSH workspace views
+        ├── config/    # YAML toolkit views
+        ├── logs/      # Log viewer views
+        └── index.ts   # Master views barrel
+```
+
+Always import from path aliases (e.g. `@/services`, `@/hooks`, `@/types`) to ensure clean dependency boundaries.
+
+---
+
 ## 🧪 Quality Gates & CI Standards
 
 Every contribution to DevDesk must satisfy three strict quality gates before merging:
@@ -35,7 +68,7 @@ Every contribution to DevDesk must satisfy three strict quality gates before mer
 ```bash
 npm run lint
 ```
-DevDesk uses Oxlint for sub-50ms static analysis across all TypeScript/TSX files. No unused variables, missing dependencies, or unhandled lint violations are permitted.
+DevDesk uses Oxlint for sub-80ms static analysis across all TypeScript/TSX files. No unused variables, missing dependencies, or unhandled lint violations are permitted.
 
 ### 2. TypeScript Compilation (Strict Mode)
 ```bash
@@ -43,11 +76,11 @@ npx tsc -b
 ```
 All code must compile under strict TypeScript settings with no `any` leaks or unresolved module references.
 
-### 3. Vitest Unit Test Suite
+### 3. Vitest Unit Test Suite (123+ Passing Tests)
 ```bash
 npm run test
 ```
-All unit tests across API execution, assertions, mock server, OpenAPI parsing, GraphQL builder, real-time protocols, and navigation history must pass with 100% success.
+All 123+ unit tests across API execution, assertions, mock server, OpenAPI parsing, GraphQL builder, real-time protocols, i18n, Postman & HAR interop, and storage resilience must pass with 100% success.
 
 ---
 
@@ -96,16 +129,8 @@ The tool will automatically appear in:
 
 ---
 
-## 🏛 Core Architectural Rules
+## 🔒 Security Guidelines
 
-1. **Local-First & Zero Telemetry**:
-   Never introduce external network telemetry, tracking pixels, or phone-home API requests. All features must function completely offline.
-
-2. **No `eval()` or Code Execution**:
-   Never use `eval()`, `new Function()`, or dynamic scripting to evaluate user data or assertions. Use recursive AST parsing and safe string manipulation.
-
-3. **Memory Hygiene**:
-   Always clean up event listeners, timers (`setInterval`), and EventSource/WebSocket subscriptions inside `useEffect` cleanup returns. Limit unbounded streaming logs to 500 entries.
-
-4. **Visual & Aesthetic Excellence**:
-   Always follow DevDesk's design system tokens (`var(--bg-app)`, `var(--bg-card)`, `var(--border-subtle)`, `var(--accent)`, `var(--text-primary)`). Maintain full compatibility with both Light (default) and Dark themes.
+- **Zero `eval()`**: Never evaluate string code in assertions or templates.
+- **Local Sandbox**: Never introduce external cloud tracking scripts or remote analytics SDKs.
+- **Credential Masking**: Ensure secret tokens and authorization headers are sanitized when saving state.

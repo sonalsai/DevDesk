@@ -1,0 +1,18 @@
+{
+  "name": "DevDesk — Developer Workspace & API Desk",
+  "short_name": "DevDesk",
+  "description": "Fast, private, local-first developer cockpit with REST, GraphQL, WebSocket, SSE, Local Mock Server, and utilities.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0c1c",
+  "theme_color": "#4750dd",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["developer", "productivity", "utilities"]
+}

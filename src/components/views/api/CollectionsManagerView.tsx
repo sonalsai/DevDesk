@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   FolderPlus,
   Plus,
@@ -12,10 +12,16 @@ import {
   Search,
   Check,
   RotateCcw,
+  Play,
+  Upload,
+  Download,
+  FileCode,
 } from 'lucide-react';
-import { useWorkspace } from '@/hooks';
-import { useToast } from '@/hooks';
+import { useWorkspace, useToast } from '@/hooks';
 import type { ApiHistoryItem } from '../../../types/api';
+import { importPostmanCollection, exportToPostmanCollection } from '../../../services/interop/postmanConverter';
+import { importHarArchive, exportToHarArchive } from '../../../services/interop/harConverter';
+import { CollectionRunnerModal } from './CollectionRunnerModal';
 
 export const CollectionsManagerView: React.FC = () => {
   const {
@@ -32,6 +38,7 @@ export const CollectionsManagerView: React.FC = () => {
     openRequestInTab,
     createNewTab,
     setActiveView,
+    activeEnvironment,
   } = useWorkspace();
 
   const { showToast } = useToast();
@@ -39,6 +46,10 @@ export const CollectionsManagerView: React.FC = () => {
   const collections = data.apiCollections || [];
   const allRequests = data.apiRequests || [];
   const apiHistory = data.apiHistory || [];
+
+  const postmanFileInputRef = useRef<HTMLInputElement>(null);
+  const harFileInputRef = useRef<HTMLInputElement>(null);
+  const [showRunnerModal, setShowRunnerModal] = useState(false);
 
   const [mainTab, setMainTab] = useState<'collections' | 'history'>('collections');
   const [selectedCollectionId, setSelectedCollectionId] = useState<string | null>(
@@ -62,6 +73,73 @@ export const CollectionsManagerView: React.FC = () => {
   const collectionRequests = selectedCollection
     ? allRequests.filter((r) => r.collectionId === selectedCollection.id)
     : [];
+
+  const handleImportPostman = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const text = ev.target?.result as string;
+        const { collection, requests } = importPostmanCollection(text);
+        addCollection(collection);
+        requests.forEach((r) => addApiRequest(r));
+        setSelectedCollectionId(collection.id);
+        showToast(`Imported Postman collection "${collection.name}" (${requests.length} requests)`, 'success', 2500);
+      } catch (err: any) {
+        showToast(`Postman import failed: ${err.message}`, 'error', 3000);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleImportHar = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedCollection) {
+      showToast('Please select or create a collection first before importing HAR', 'info');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const text = ev.target?.result as string;
+        const { requests } = importHarArchive(text, selectedCollection.id);
+        requests.forEach((r) => addApiRequest(r));
+        showToast(`Imported ${requests.length} requests from HAR into "${selectedCollection.name}"`, 'success', 2500);
+      } catch (err: any) {
+        showToast(`HAR import failed: ${err.message}`, 'error', 3000);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleExportPostman = () => {
+    if (!selectedCollection) return;
+    const obj = exportToPostmanCollection(selectedCollection, collectionRequests);
+    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${selectedCollection.name.toLowerCase().replace(/\s+/g, '-')}-postman.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Exported Postman Collection v2.1', 'success', 2000);
+  };
+
+  const handleExportHar = () => {
+    if (!selectedCollection) return;
+    const obj = exportToHarArchive(collectionRequests, apiHistory);
+    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${selectedCollection.name.toLowerCase().replace(/\s+/g, '-')}.har`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Exported HAR 1.2 Archive', 'success', 2000);
+  };
 
   const handleCreateCollection = (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,10 +245,20 @@ export const CollectionsManagerView: React.FC = () => {
         </div>
 
         {mainTab === 'collections' && (
-          <button className="btn btn-secondary" onClick={() => setIsCreatingCollection(true)}>
-            <FolderPlus size={14} />
-            <span>New Collection</span>
-          </button>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button className="btn btn-secondary" onClick={() => setIsCreatingCollection(true)}>
+              <FolderPlus size={14} />
+              <span>New Collection</span>
+            </button>
+            <button className="btn btn-secondary" onClick={() => postmanFileInputRef.current?.click()} title="Import Postman Collection v2.1">
+              <Upload size={14} />
+              <span>Import Postman</span>
+            </button>
+            <button className="btn btn-secondary" onClick={() => harFileInputRef.current?.click()} title="Import HTTP Archive (HAR 1.2)">
+              <FileCode size={14} />
+              <span>Import HAR</span>
+            </button>
+          </div>
         )}
 
         {mainTab === 'history' && apiHistory.length > 0 && (
@@ -352,7 +440,29 @@ export const CollectionsManagerView: React.FC = () => {
                     )}
                   </div>
 
-                  <div style={{ display: 'flex', gap: 6 }}>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    <button
+                      className="btn btn-sm btn-secondary"
+                      onClick={() => setShowRunnerModal(true)}
+                      title="Run automated batch tests on collection"
+                      disabled={collectionRequests.length === 0}
+                    >
+                      <Play size={12} /> Run Tests
+                    </button>
+                    <button
+                      className="btn btn-sm btn-secondary"
+                      onClick={handleExportPostman}
+                      title="Export collection as Postman Collection v2.1"
+                    >
+                      <Download size={12} /> Postman
+                    </button>
+                    <button
+                      className="btn btn-sm btn-secondary"
+                      onClick={handleExportHar}
+                      title="Export requests as HAR 1.2"
+                    >
+                      <FileCode size={12} /> HAR
+                    </button>
                     <button
                       className="btn btn-sm btn-primary"
                       onClick={() => handleNewRequestInCollection(selectedCollection.id)}
@@ -643,6 +753,33 @@ export const CollectionsManagerView: React.FC = () => {
             )}
           </div>
         </div>
+      )}
+
+      {/* Hidden file inputs for Postman & HAR import */}
+      <input
+        type="file"
+        ref={postmanFileInputRef}
+        style={{ display: 'none' }}
+        accept=".json"
+        onChange={handleImportPostman}
+      />
+      <input
+        type="file"
+        ref={harFileInputRef}
+        style={{ display: 'none' }}
+        accept=".har,.json"
+        onChange={handleImportHar}
+      />
+
+      {/* Batch Collection Runner Modal */}
+      {selectedCollection && (
+        <CollectionRunnerModal
+          isOpen={showRunnerModal}
+          onClose={() => setShowRunnerModal(false)}
+          collection={selectedCollection}
+          requests={collectionRequests}
+          environment={activeEnvironment}
+        />
       )}
     </div>
   );

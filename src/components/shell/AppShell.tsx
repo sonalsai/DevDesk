@@ -3,21 +3,21 @@ import { useWorkspace } from '@/hooks';
 import { TopBar } from './TopBar';
 import { Sidebar } from './Sidebar';
 import { CommandPalette } from './CommandPalette';
-import { ShortcutsModal } from '../views/ShortcutsModal';
-import { PrivacyModal } from '../views/PrivacyModal';
+import { ShortcutsModal } from '../views/modals/ShortcutsModal';
+import { PrivacyModal } from '../views/modals/PrivacyModal';
 import { ErrorBoundary, LoadingFallback } from '../common';
 
 // Instant critical path views
-import { HomeDashboard } from '../views/HomeDashboard';
-import { ScratchpadView } from '../views/ScratchpadView';
-import { TasksView } from '../views/TasksView';
+import { HomeDashboard } from '../views/workspace/HomeDashboard';
+import { ScratchpadView } from '../views/workspace/ScratchpadView';
+import { TasksView } from '../views/workspace/TasksView';
 
 // Code-split extended workspace views for fast first-paint
-const ProjectsView = lazy(() => import('../views/ProjectsView').then((m) => ({ default: m.ProjectsView })));
-const SnippetsView = lazy(() => import('../views/SnippetsView').then((m) => ({ default: m.SnippetsView })));
-const AllToolsView = lazy(() => import('../views/AllToolsView').then((m) => ({ default: m.AllToolsView })));
-const FavoritesView = lazy(() => import('../views/FavoritesView').then((m) => ({ default: m.FavoritesView })));
-const RecentView = lazy(() => import('../views/RecentView').then((m) => ({ default: m.RecentView })));
+const ProjectsView = lazy(() => import('../views/workspace/ProjectsView').then((m) => ({ default: m.ProjectsView })));
+const SnippetsView = lazy(() => import('../views/workspace/SnippetsView').then((m) => ({ default: m.SnippetsView })));
+const AllToolsView = lazy(() => import('../views/workspace/AllToolsView').then((m) => ({ default: m.AllToolsView })));
+const FavoritesView = lazy(() => import('../views/workspace/FavoritesView').then((m) => ({ default: m.FavoritesView })));
+const RecentView = lazy(() => import('../views/workspace/RecentView').then((m) => ({ default: m.RecentView })));
 const SettingsView = lazy(() => import('../views/SettingsView').then((m) => ({ default: m.SettingsView })));
 const ApiClientView = lazy(() => import('../views/api/ApiClientView').then((m) => ({ default: m.ApiClientView })));
 const CollectionsManagerView = lazy(() => import('../views/api/CollectionsManagerView').then((m) => ({ default: m.CollectionsManagerView })));
